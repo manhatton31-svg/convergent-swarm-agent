@@ -11,6 +11,17 @@ import {
   COORDINATED_WORKFLOW_INPUT_SCHEMA,
   COORDINATED_WORKFLOW_OUTPUT_SCHEMA,
 } from './schemas/workflow-schemas';
+import {
+  AGENT_REGISTRATION_INPUT_SCHEMA,
+  AGENT_REGISTRATION_OUTPUT_SCHEMA,
+  AGENT_REGISTRY_QUERY_OUTPUT_SCHEMA,
+} from './schemas/registry-schemas';
+import {
+  assertValidRegistration,
+  parseRegistryQuery,
+  queryRegistry,
+  registerAgent,
+} from './registry/agent-registry';
 import { handleCoordinatedWorkflow } from './agent/coordinated-workflow';
 import { handleTask, parseChatToTask } from './agent/task-handler';
 import { config } from './config';
@@ -28,6 +39,11 @@ const LEDGER_QUERY_USAGE = {
   requesting_agent: 'agent identifier string',
   since: 'ISO-8601 timestamp (entries on or after this time)',
   limit: 'positive integer, max 100 (default 50)',
+  entry_type: 'task | feedback | agent_registration',
+  skill: 'filter registry agents by skill (partial match)',
+  availability: 'available | limited | unavailable',
+  max_price_usd: 'max pricing rate_usd for registry entries',
+  tag: 'filter registry agents by tag',
 };
 
 export function createServer() {
@@ -69,6 +85,9 @@ export function createServer() {
       transition_artifact: TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
       coordinated_workflow_request: COORDINATED_WORKFLOW_INPUT_SCHEMA,
       coordinated_workflow_artifact: COORDINATED_WORKFLOW_OUTPUT_SCHEMA,
+      agent_registration: AGENT_REGISTRATION_INPUT_SCHEMA,
+      agent_registration_response: AGENT_REGISTRATION_OUTPUT_SCHEMA,
+      agent_registry_query: AGENT_REGISTRY_QUERY_OUTPUT_SCHEMA,
       feedback_submission: FEEDBACK_INPUT_SCHEMA,
     });
   });
@@ -124,6 +143,47 @@ export function createServer() {
       res.status(200).json(artifact);
     } catch (err) {
       handleRouteError(res, err, 'Task error');
+    }
+  });
+
+  app.post('/api/register-agent', async (req: Request, res: Response) => {
+    try {
+      const registration = assertValidRegistration(req.body);
+      const entry = await registerAgent(registration);
+      res.status(201).json({
+        message: 'Agent registered in stigmergic registry',
+        entry,
+        registry_endpoint: `${config.publicUrl}/api/registry`,
+        ledger_path: config.ledgerRef,
+      });
+    } catch (err) {
+      handleRouteError(res, err, 'Agent registration error');
+    }
+  });
+
+  app.get('/api/registry', async (req: Request, res: Response) => {
+    const { query, errors } = parseRegistryQuery(req.query as Record<string, unknown>);
+
+    if (errors.length > 0) {
+      sendError(res, 400, ErrorCode.INVALID_LEDGER_QUERY, 'Invalid registry query parameters', {
+        validation_errors: errors,
+        usage: {
+          skill: 'skill name (partial match)',
+          availability: 'available | limited | unavailable',
+          max_price_usd: 'maximum rate_usd',
+          agent_id: 'exact agent ID',
+          tag: 'tag (partial match)',
+          limit: 'positive integer, max 100 (default 50)',
+        },
+      });
+      return;
+    }
+
+    try {
+      const result = await queryRegistry(query);
+      res.json(result);
+    } catch (err) {
+      handleRouteError(res, err, 'Registry query error');
     }
   });
 
@@ -197,6 +257,8 @@ export function createServer() {
       endpoints: {
         task: 'POST /api/task',
         coordinated_workflow: 'POST /api/coordinated-workflow',
+        register_agent: 'POST /api/register-agent',
+        registry: 'GET /api/registry',
         chat: 'POST /api/chat',
         feedback: 'POST /api/feedback',
         ledger: 'GET /api/ledger?task_type&principle&requesting_agent&since&limit',

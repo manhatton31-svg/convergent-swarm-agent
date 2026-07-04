@@ -5,6 +5,17 @@ All notable changes to the Convergent Swarm Agent (CSA) are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-07-04
+
+### Added
+
+- **Agent Registry** — `agent_registry` skill; agents register skills, pricing (hourly/per-task/fixed), and availability via `POST /api/register-agent`
+- **Queryable registry** — `GET /api/registry` with filters for `skill`, `availability`, `max_price_usd`, `agent_id`, `tag`
+- **Ledger integration** — Registrations stored as `agent_registration` entries in the stigmergic ledger; also queryable via `GET /api/ledger?entry_type=agent_registration`
+- **`coordinated_workflow` enhancement** — Now prioritizes registered agents with registry pricing, skill matching, and availability filtering
+
+---
+
 ## [1.1.0] — 2026-07-04
 
 ### Added

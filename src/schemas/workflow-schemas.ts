@@ -166,7 +166,7 @@ export const COORDINATED_WORKFLOW_OUTPUT_SCHEMA = {
           average_satisfaction: { type: ['number', 'null'] },
           availability_signal: {
             type: 'string',
-            enum: ['active_in_ledger', 'feedback_only', 'inferred_capability'],
+            enum: ['active_in_ledger', 'feedback_only', 'inferred_capability', 'registered'],
           },
           estimated_total_cost_usd: { type: 'number', minimum: 0 },
           subtasks_assigned: { type: 'array', items: { type: 'string' } },

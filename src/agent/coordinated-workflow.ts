@@ -2,18 +2,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { ApiError, ErrorCode } from '../errors/api-error';
 import { config } from '../config';
 import { buildFeedbackRequest } from '../feedback/feedback';
-import { appendLedgerEntry, readLedger } from '../ledger/stigmergic-ledger';
+import { appendLedgerEntry } from '../ledger/stigmergic-ledger';
+import {
+  buildMatchingProfiles,
+  estimateCostFromRegistryPricing,
+} from '../registry/agent-registry';
 import { COORDINATED_WORKFLOW_INPUT_SCHEMA } from '../schemas/workflow-schemas';
 import { validateAgainstSchema } from '../schemas/validate';
 import type {
   ActivePrinciple,
-  AgentAvailabilitySignal,
+  AgentMatchingProfile,
   CoordinatedWorkflowArtifact,
   CoordinatedWorkflowRequest,
-  LedgerFeedbackEntry,
   LedgerTaskEntry,
   RecommendedTeamMember,
-  TaskType,
   WorkflowSubtask,
 } from '../types';
 
@@ -27,83 +29,6 @@ interface SubtaskTemplate {
   required_capability: string;
   base_cost_usd: number;
   depends_on: string[];
-}
-
-interface AgentProfile {
-  agent_id: string;
-  display_name: string;
-  capabilities: Set<string>;
-  ledger_task_count: number;
-  feedback_count: number;
-  average_satisfaction: number | null;
-  last_active: string;
-  availability_signal: AgentAvailabilitySignal;
-  match_score_base: number;
-}
-
-const SWARM_AGENT_POOL: Array<{
-  agent_id: string;
-  display_name: string;
-  capabilities: string[];
-}> = [
-  {
-    agent_id: 'growth-strategist-agent-v2',
-    display_name: 'Growth Strategist Agent',
-    capabilities: ['readiness', 'strategy', 'transition', 'analysis'],
-  },
-  {
-    agent_id: 'creative-brief-agent',
-    display_name: 'Creative Brief Agent',
-    capabilities: ['convergence', 'creative', 'brand', 'synthesis'],
-  },
-  {
-    agent_id: 'procurement-scout-agent',
-    display_name: 'Procurement Scout Agent',
-    capabilities: ['procurement', 'enterprise', 'trust', 'credentials'],
-  },
-  {
-    agent_id: 'content-pipeline-agent',
-    display_name: 'Content Pipeline Agent',
-    capabilities: ['content', 'seo', 'legibility', 'publishing'],
-  },
-  {
-    agent_id: 'performance-ops-agent',
-    display_name: 'Performance Ops Agent',
-    capabilities: ['performance', 'analytics', 'execution', 'optimization'],
-  },
-];
-
-const TASK_TYPE_CAPABILITIES: Record<TaskType, string[]> = {
-  future_state_transition: ['readiness', 'strategy', 'transition', 'analysis'],
-  convergence_analysis: ['convergence', 'creative', 'synthesis', 'brand'],
-  strategy_evolution: ['strategy', 'enterprise', 'trust', 'evolution'],
-  coordinated_workflow: ['coordination', 'orchestration'],
-};
-
-function formatDisplayName(agentId: string): string {
-  return agentId
-    .replace(/-agent(-v\d+)?$/i, '')
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
-    .concat(' Agent');
-}
-
-function inferPoolCapabilities(agentId: string): string[] {
-  const poolMatch = SWARM_AGENT_POOL.find((a) => a.agent_id === agentId);
-  if (poolMatch) return poolMatch.capabilities;
-  if (agentId.includes('growth') || agentId.includes('strateg')) {
-    return ['strategy', 'transition', 'analysis'];
-  }
-  if (agentId.includes('creative') || agentId.includes('brief')) {
-    return ['convergence', 'creative', 'brand'];
-  }
-  if (agentId.includes('procurement') || agentId.includes('scout')) {
-    return ['procurement', 'enterprise', 'trust'];
-  }
-  if (agentId.includes('content')) return ['content', 'seo', 'legibility'];
-  if (agentId.includes('performance')) return ['performance', 'analytics', 'execution'];
-  return ['general', 'marketing'];
 }
 
 export function validateCoordinatedWorkflowRequest(request: unknown): string[] {
@@ -120,90 +45,6 @@ export function validateCoordinatedWorkflowRequest(request: unknown): string[] {
     return ['task_type must be "coordinated_workflow"'];
   }
   return [];
-}
-
-async function buildAgentProfiles(): Promise<{
-  profiles: AgentProfile[];
-  signalsUsed: number;
-}> {
-  const ledger = await readLedger();
-  const profileMap = new Map<string, AgentProfile>();
-
-  for (const entry of ledger.entries) {
-    const agentId = entry.requesting_agent;
-    let profile = profileMap.get(agentId);
-
-    if (!profile) {
-      const poolMatch = SWARM_AGENT_POOL.find((a) => a.agent_id === agentId);
-      profile = {
-        agent_id: agentId,
-        display_name: poolMatch?.display_name ?? formatDisplayName(agentId),
-        capabilities: new Set(poolMatch?.capabilities ?? inferPoolCapabilities(agentId)),
-        ledger_task_count: 0,
-        feedback_count: 0,
-        average_satisfaction: null,
-        last_active: entry.timestamp,
-        availability_signal: 'active_in_ledger',
-        match_score_base: 0,
-      };
-      profileMap.set(agentId, profile);
-    }
-
-    if (new Date(entry.timestamp) > new Date(profile.last_active)) {
-      profile.last_active = entry.timestamp;
-    }
-
-    if (entry.type === 'task') {
-      const task = entry as LedgerTaskEntry;
-      profile.ledger_task_count += 1;
-      profile.availability_signal = 'active_in_ledger';
-      for (const cap of TASK_TYPE_CAPABILITIES[task.task_type] ?? []) {
-        profile.capabilities.add(cap);
-      }
-    } else {
-      const feedback = entry as LedgerFeedbackEntry;
-      profile.feedback_count += 1;
-      if (profile.ledger_task_count === 0) {
-        profile.availability_signal = 'feedback_only';
-      }
-      if (profile.average_satisfaction === null) {
-        profile.average_satisfaction = feedback.satisfaction_score;
-      } else {
-        const total =
-          profile.average_satisfaction * (profile.feedback_count - 1) +
-          feedback.satisfaction_score;
-        profile.average_satisfaction =
-          Math.round((total / profile.feedback_count) * 10) / 10;
-      }
-    }
-
-    profile.match_score_base =
-      profile.ledger_task_count * 2 +
-      profile.feedback_count +
-      (profile.average_satisfaction ?? 5) * 0.5;
-  }
-
-  for (const poolAgent of SWARM_AGENT_POOL) {
-    if (!profileMap.has(poolAgent.agent_id)) {
-      profileMap.set(poolAgent.agent_id, {
-        agent_id: poolAgent.agent_id,
-        display_name: poolAgent.display_name,
-        capabilities: new Set(poolAgent.capabilities),
-        ledger_task_count: 0,
-        feedback_count: 0,
-        average_satisfaction: null,
-        last_active: new Date(0).toISOString(),
-        availability_signal: 'inferred_capability',
-        match_score_base: 1,
-      });
-    }
-  }
-
-  const profiles = [...profileMap.values()].sort(
-    (a, b) => b.match_score_base - a.match_score_base
-  );
-
-  return { profiles, signalsUsed: ledger.entries.length };
 }
 
 function buildSubtaskTemplates(
@@ -266,29 +107,48 @@ function buildSubtaskTemplates(
   return templates.slice(0, isConvergence ? 4 : 3);
 }
 
-function scoreAgentForCapability(profile: AgentProfile, capability: string): number {
+function scoreAgentForCapability(profile: AgentMatchingProfile, capability: string): number {
   let score = profile.match_score_base;
-  if (profile.capabilities.has(capability)) score += 10;
+  const capLower = capability.toLowerCase();
+
+  if (profile.capabilities.has(capability) || profile.capabilities.has(capLower)) score += 10;
   for (const cap of profile.capabilities) {
-    if (cap.includes(capability) || capability.includes(cap)) score += 3;
+    if (cap.includes(capLower) || capLower.includes(cap)) score += 3;
   }
+  for (const skill of profile.skills) {
+    if (skill.toLowerCase().includes(capLower) || capLower.includes(skill.toLowerCase())) {
+      score += 8;
+    }
+  }
+
+  if (profile.registered) score += 12;
+  if (profile.registry_availability === 'available') score += 8;
+  if (profile.registry_availability === 'limited') score += 3;
   if (profile.availability_signal === 'active_in_ledger') score += 5;
   if (profile.availability_signal === 'feedback_only') score += 2;
+
   return score;
 }
 
-function estimateSubtaskCost(baseCost: number, satisfaction: number | null): number {
-  if (satisfaction === null) return baseCost;
-  const qualityMultiplier = 1 + (10 - satisfaction) * 0.02;
+function estimateSubtaskCost(
+  profile: AgentMatchingProfile,
+  baseCost: number,
+  estimatedDuration: string
+): number {
+  if (profile.pricing) {
+    return estimateCostFromRegistryPricing(profile.pricing, baseCost, estimatedDuration);
+  }
+  if (profile.average_satisfaction === null) return baseCost;
+  const qualityMultiplier = 1 + (10 - profile.average_satisfaction) * 0.02;
   return Math.round(baseCost * qualityMultiplier);
 }
 
 function selectAgentForSubtask(
-  profiles: AgentProfile[],
+  profiles: AgentMatchingProfile[],
   capability: string,
   usedAgents: Map<string, number>,
   maxPerAgent: number
-): AgentProfile {
+): AgentMatchingProfile {
   const ranked = [...profiles].sort((a, b) => {
     const scoreA = scoreAgentForCapability(a, capability) - (usedAgents.get(a.agent_id) ?? 0) * 3;
     const scoreB = scoreAgentForCapability(b, capability) - (usedAgents.get(b.agent_id) ?? 0) * 3;
@@ -304,17 +164,46 @@ function selectAgentForSubtask(
   return ranked[0];
 }
 
+function buildMatchRationale(profile: AgentMatchingProfile): string {
+  const parts: string[] = [];
+
+  if (profile.registered) {
+    parts.push(
+      `registered agent (${profile.registry_availability ?? 'unknown'} availability)`
+    );
+    if (profile.pricing) {
+      parts.push(`${profile.pricing.model} @ $${profile.pricing.rate_usd} USD`);
+    }
+  } else {
+    parts.push(`matched via stigmergic ledger (${profile.availability_signal.replace(/_/g, ' ')})`);
+  }
+
+  parts.push(`${profile.ledger_task_count} prior task(s)`);
+  if (profile.average_satisfaction !== null) {
+    parts.push(`avg satisfaction ${profile.average_satisfaction}/10`);
+  }
+  const caps = [...profile.capabilities].slice(0, 4).join(', ');
+  if (caps) parts.push(`capabilities: ${caps}`);
+
+  return parts.join(', ') + '.';
+}
+
 function buildWorkflowSummary(
   objective: string,
   team: RecommendedTeamMember[],
-  subtaskCount: number
+  subtaskCount: number,
+  registryCount: number
 ): string {
   const teamNames = team.map((m) => m.display_name).join(', ');
+  const registryNote =
+    registryCount > 0
+      ? `${registryCount} registered agent(s) in the registry were consulted. `
+      : 'No registry entries yet — matches derived from ledger history and swarm templates. ';
   return (
     `CSA decomposed "${objective.slice(0, 80)}${objective.length > 80 ? '…' : ''}" into ` +
-    `${subtaskCount} coordinated subtasks. Recommended team of ${team.length} agents from stigmergic ` +
-    `ledger signals: ${teamNames}. Each subtask is matched by capability fit, ledger activity, and ` +
-    `feedback satisfaction. CSA charges a ${COORDINATION_FEE_PERCENT}% coordination fee for orchestration.`
+    `${subtaskCount} coordinated subtasks. ${registryNote}Recommended team of ${team.length} agents: ` +
+    `${teamNames}. Matched by skill fit, registry pricing, reputation, and availability. ` +
+    `CSA charges a ${COORDINATION_FEE_PERCENT}% coordination fee.`
   );
 }
 
@@ -331,7 +220,7 @@ export async function handleCoordinatedWorkflow(
   const generatedAt = new Date().toISOString();
   const objective = req.context.objective.trim();
 
-  const { profiles, signalsUsed } = await buildAgentProfiles();
+  const { profiles, signalsUsed, registryCount } = await buildMatchingProfiles();
   const templates = buildSubtaskTemplates(objective, req.context.industry);
   const usedAgents = new Map<string, number>();
   const subtasks: WorkflowSubtask[] = [];
@@ -341,7 +230,7 @@ export async function handleCoordinatedWorkflow(
     const agent = selectAgentForSubtask(profiles, template.required_capability, usedAgents, 2);
     usedAgents.set(agent.agent_id, (usedAgents.get(agent.agent_id) ?? 0) + 1);
 
-    const cost = estimateSubtaskCost(template.base_cost_usd, agent.average_satisfaction);
+    const cost = estimateSubtaskCost(agent, template.base_cost_usd, template.estimated_duration);
 
     subtasks.push({
       subtask_id: template.id,
@@ -352,11 +241,7 @@ export async function handleCoordinatedWorkflow(
       recommended_agent_id: agent.agent_id,
       recommended_agent_name: agent.display_name,
       estimated_cost_usd: cost,
-      match_rationale:
-        `Matched via stigmergic ledger — ${agent.availability_signal.replace(/_/g, ' ')}, ` +
-        `${agent.ledger_task_count} prior task(s), ` +
-        `${agent.average_satisfaction !== null ? `avg satisfaction ${agent.average_satisfaction}/10` : 'no feedback yet'}, ` +
-        `capabilities: ${[...agent.capabilities].slice(0, 4).join(', ')}.`,
+      match_rationale: buildMatchRationale(agent),
       depends_on: template.depends_on,
     });
   }
@@ -430,7 +315,12 @@ export async function handleCoordinatedWorkflow(
     skill: 'coordinated_workflow',
     principles_applied,
     main_objective: objective,
-    workflow_summary: buildWorkflowSummary(objective, recommended_team, subtasks.length),
+    workflow_summary: buildWorkflowSummary(
+      objective,
+      recommended_team,
+      subtasks.length,
+      registryCount
+    ),
     subtasks,
     recommended_team,
     cost_breakdown: {

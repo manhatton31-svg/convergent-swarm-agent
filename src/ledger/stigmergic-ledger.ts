@@ -2,11 +2,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import { config } from '../config';
 import type {
+  LedgerAgentRegistrationEntry,
   LedgerEntry,
+  LedgerEntryType,
   LedgerFeedbackEntry,
   LedgerQueryParams,
   LedgerQueryResult,
   LedgerTaskEntry,
+  RegistryAvailability,
   ReputationMetrics,
   RoadmapPrinciple,
   StigmergicLedger,
@@ -105,6 +108,10 @@ function recomputeInsights(ledger: StigmergicLedger): void {
 }
 
 function matchesQuery(entry: LedgerEntry, query: LedgerQueryParams, sinceMs?: number): boolean {
+  if (query.entry_type && entry.type !== query.entry_type) {
+    return false;
+  }
+
   if (query.requesting_agent && entry.requesting_agent !== query.requesting_agent) {
     return false;
   }
@@ -125,6 +132,29 @@ function matchesQuery(entry: LedgerEntry, query: LedgerQueryParams, sinceMs?: nu
     }
   }
 
+  if (entry.type === 'agent_registration') {
+    const reg = entry as LedgerAgentRegistrationEntry;
+    if (query.availability && reg.availability !== query.availability) return false;
+    if (query.max_price_usd !== undefined && reg.pricing.rate_usd > query.max_price_usd) {
+      return false;
+    }
+    if (query.skill) {
+      const skillLower = query.skill.toLowerCase();
+      const hasSkill = reg.skills.some(
+        (s) =>
+          s.toLowerCase().includes(skillLower) || skillLower.includes(s.toLowerCase())
+      );
+      if (!hasSkill) return false;
+    }
+    if (query.tag) {
+      const tagLower = query.tag.toLowerCase();
+      const hasTag = (reg.tags ?? []).some(
+        (t) => t.toLowerCase().includes(tagLower) || tagLower.includes(t.toLowerCase())
+      );
+      if (!hasTag) return false;
+    }
+  }
+
   return true;
 }
 
@@ -134,6 +164,45 @@ export function parseLedgerQuery(raw: Record<string, unknown>): {
 } {
   const errors: string[] = [];
   const query: LedgerQueryParams = {};
+
+  if (raw.entry_type !== undefined) {
+    const entryType = String(raw.entry_type);
+    if (!['task', 'feedback', 'agent_registration'].includes(entryType)) {
+      errors.push('entry_type must be one of: task, feedback, agent_registration');
+    } else {
+      query.entry_type = entryType as LedgerEntryType;
+    }
+  }
+
+  if (raw.skill !== undefined) {
+    const skill = String(raw.skill).trim();
+    if (!skill) errors.push('skill must be a non-empty string');
+    else query.skill = skill;
+  }
+
+  if (raw.availability !== undefined) {
+    const avail = String(raw.availability);
+    if (!['available', 'limited', 'unavailable'].includes(avail)) {
+      errors.push('availability must be available, limited, or unavailable');
+    } else {
+      query.availability = avail as RegistryAvailability;
+    }
+  }
+
+  if (raw.max_price_usd !== undefined) {
+    const price = parseFloat(String(raw.max_price_usd));
+    if (Number.isNaN(price) || price < 0) {
+      errors.push('max_price_usd must be a non-negative number');
+    } else {
+      query.max_price_usd = price;
+    }
+  }
+
+  if (raw.tag !== undefined) {
+    const tag = String(raw.tag).trim();
+    if (!tag) errors.push('tag must be a non-empty string');
+    else query.tag = tag;
+  }
 
   if (raw.task_type !== undefined) {
     const taskType = String(raw.task_type);

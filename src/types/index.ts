@@ -18,7 +18,95 @@ export type TaskType =
 export type AgentAvailabilitySignal =
   | 'active_in_ledger'
   | 'feedback_only'
-  | 'inferred_capability';
+  | 'inferred_capability'
+  | 'registered';
+
+export type RegistryAvailability = 'available' | 'limited' | 'unavailable';
+
+export type AgentPricingModelType = 'hourly' | 'per_task' | 'fixed';
+
+export interface AgentPricingModel {
+  model: AgentPricingModelType;
+  rate_usd: number;
+  notes?: string;
+}
+
+export interface AgentRegistrationRequest {
+  agent_id: string;
+  agent_name: string;
+  skills: string[];
+  pricing: AgentPricingModel;
+  availability: RegistryAvailability;
+  description?: string;
+  tags?: string[];
+}
+
+export interface LedgerAgentRegistrationEntry {
+  type: 'agent_registration';
+  agent_id: string;
+  agent_name: string;
+  /** Same as agent_id — enables ledger query by requesting_agent */
+  requesting_agent: string;
+  timestamp: string;
+  skills: string[];
+  pricing: AgentPricingModel;
+  availability: RegistryAvailability;
+  description?: string;
+  tags?: string[];
+}
+
+export interface RegistryQueryParams {
+  skill?: string;
+  availability?: RegistryAvailability;
+  max_price_usd?: number;
+  agent_id?: string;
+  tag?: string;
+  limit?: number;
+}
+
+export interface RegisteredAgentView {
+  agent_id: string;
+  agent_name: string;
+  skills: string[];
+  pricing: AgentPricingModel;
+  availability: RegistryAvailability;
+  description?: string;
+  tags: string[];
+  registered_at: string;
+  reputation: {
+    ledger_task_count: number;
+    feedback_count: number;
+    average_satisfaction: number | null;
+  };
+}
+
+/** Unified profile for coordinated_workflow agent matching */
+export interface AgentMatchingProfile {
+  agent_id: string;
+  display_name: string;
+  capabilities: Set<string>;
+  skills: string[];
+  ledger_task_count: number;
+  feedback_count: number;
+  average_satisfaction: number | null;
+  last_active: string;
+  availability_signal: AgentAvailabilitySignal;
+  registry_availability: RegistryAvailability | null;
+  pricing: AgentPricingModel | null;
+  match_score_base: number;
+  registered: boolean;
+  tags: string[];
+}
+
+export interface RegistryQueryResult {
+  version: string;
+  last_updated: string;
+  query: RegistryQueryParams;
+  total_registered: number;
+  total_matching: number;
+  returned: number;
+  agents: RegisteredAgentView[];
+}
 
 export interface TaskContext {
   business_name?: string;
@@ -225,7 +313,12 @@ export interface LedgerFeedbackEntry {
   roadmap_principle_rationale: string;
 }
 
-export type LedgerEntry = LedgerTaskEntry | LedgerFeedbackEntry;
+export type LedgerEntry =
+  | LedgerTaskEntry
+  | LedgerFeedbackEntry
+  | LedgerAgentRegistrationEntry;
+
+export type LedgerEntryType = 'task' | 'feedback' | 'agent_registration';
 
 export interface StigmergicLedger {
   version: string;
@@ -241,10 +334,15 @@ export interface StigmergicLedger {
 }
 
 export interface LedgerQueryParams {
+  entry_type?: LedgerEntryType;
   task_type?: TaskType;
   principle?: RoadmapPrinciple;
   requesting_agent?: string;
   since?: string;
+  skill?: string;
+  availability?: RegistryAvailability;
+  max_price_usd?: number;
+  tag?: string;
   limit?: number;
 }
 

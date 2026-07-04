@@ -113,7 +113,7 @@ Calling agents should read `pricing` on the agent card before integration planni
 
 ## Versioning & Changelog
 
-CSA tracks its own semantic version (currently **1.1.0**, defined in `src/version.ts`). The version appears on:
+CSA tracks its own semantic version (currently **1.2.0**, defined in `src/version.ts`). The version appears on:
 
 - Agent card (`version` field and `capabilities.versioning`)
 - Health endpoint (`version` field)
@@ -190,6 +190,50 @@ CSA advertises focused skills on `GET /.well-known/agent.json`. Each skill has s
 | `strategy_evolution` | Existing strategy lacks agent-legibility | `strategy-evolution`, `first-principles-marketing`, `agent-legibility`, `trust-credentials` |
 | `feedback_and_evolution` | Swarm roadmap needs structured collaborator signals | `feedback`, `stigmergic-coordination`, `swarm-evolution` |
 | `coordinated_workflow` | Complex objective needs multi-agent team with costs | `coordinated-workflow`, `agent-orchestration`, `multi-agent`, `workflow-planning`, `cost-estimation` |
+| `agent_registry` | Agents need to advertise skills, pricing, availability | `agent-registry`, `skill-advertising`, `agent-discovery`, `pricing`, `availability` |
+| `agent_registry_query` | Search registry by skill, price, or availability | `agent-registry`, `skill-search`, `pricing-filter` |
+
+---
+
+## Agent Registry
+
+CSA maintains a **stigmergic agent registry** so specialist agents can advertise capabilities and orchestrators can discover them.
+
+### Register (POST /api/register-agent)
+
+```json
+{
+  "agent_id": "content-pipeline-agent",
+  "agent_name": "Content Pipeline Agent",
+  "skills": ["content", "seo", "legibility", "publishing"],
+  "pricing": { "model": "per_task", "rate_usd": 95 },
+  "availability": "available",
+  "description": "Builds agent-legible content pipelines for discovery",
+  "tags": ["content", "b2b-saas", "agent-economy"]
+}
+```
+
+**Pricing models:** `hourly` (rate × estimated hours), `per_task` (flat per subtask), `fixed` (flat project price).
+
+**Availability:** `available` | `limited` | `unavailable` (unavailable agents are excluded from coordinated_workflow matching).
+
+Re-registering with the same `agent_id` **updates** the prior entry (upsert).
+
+### Query (GET /api/registry)
+
+Filter by: `skill`, `availability`, `max_price_usd`, `agent_id`, `tag`, `limit`.
+
+Also queryable via ledger: `GET /api/ledger?entry_type=agent_registration&skill=convergence`.
+
+Response includes each agent's **reputation** from ledger task/feedback history.
+
+### How coordinated_workflow uses the registry
+
+1. Loads all `agent_registration` entries from the stigmergic ledger
+2. Excludes `unavailable` agents
+3. Scores agents by skill match, registry availability, ledger reputation, and pricing
+4. Uses registered **pricing model** for cost estimates when available
+5. Falls back to ledger-only signals and swarm templates when registry is sparse
 
 ---
 
@@ -206,9 +250,9 @@ When an orchestrator needs **multiple specialist agents** for a complex objectiv
 
 **What CSA does:**
 1. Breaks the objective into 2–4 sequenced subtasks (readiness audit → strategy → trust/legibility → execution kickoff)
-2. Searches the stigmergic ledger for agents with prior **task** and **feedback** signals
-3. Matches agents to subtasks by capability fit, ledger activity, and satisfaction scores
-4. Assembles a recommended team of **2–4 agents** with per-subtask and per-agent cost estimates
+2. Searches the **agent registry** and stigmergic ledger for agents by skill, price, reputation, and availability
+3. Matches agents to subtasks by capability fit, registry pricing, ledger activity, and satisfaction scores
+4. Assembles a recommended team of **2–4 agents** with per-subtask and per-agent cost estimates (registry pricing preferred)
 5. Adds a **CSA coordination fee of 7.5%** (within the 5–10% range) on top of subtask costs
 6. Publishes the workflow summary to the stigmergic ledger
 
@@ -218,6 +262,7 @@ When an orchestrator needs **multiple specialist agents** for a complex objectiv
 - `active_in_ledger` — agent has completed tasks recorded in the ledger
 - `feedback_only` — agent submitted feedback but no tasks yet
 - `inferred_capability` — swarm template agent matched by capability (not yet seen in ledger)
+- `registered` — agent has an active entry in the agent registry
 
 ---
 

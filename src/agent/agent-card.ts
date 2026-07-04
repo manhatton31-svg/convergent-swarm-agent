@@ -7,6 +7,12 @@ import {
   TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
 } from '../schemas/task-schemas';
 import {
+  AGENT_REGISTRATION_INPUT_SCHEMA,
+  AGENT_REGISTRATION_OUTPUT_SCHEMA,
+  AGENT_REGISTRY_QUERY_INPUT_SCHEMA,
+  AGENT_REGISTRY_QUERY_OUTPUT_SCHEMA,
+} from '../schemas/registry-schemas';
+import {
   COORDINATED_WORKFLOW_INPUT_SCHEMA,
   COORDINATED_WORKFLOW_OUTPUT_SCHEMA,
 } from '../schemas/workflow-schemas';
@@ -75,6 +81,15 @@ export async function buildAgentCard(): Promise<AgentCard> {
         questions: 3,
         description:
           'Every task concludes with 3 mandatory feedback questions stored in the stigmergic ledger',
+      },
+      agent_registry: {
+        enabled: true,
+        register_endpoint: `${config.publicUrl}/api/register-agent`,
+        query_endpoint: `${config.publicUrl}/api/registry`,
+        description:
+          'Stigmergic agent registry — agents register skills, pricing, and availability; ' +
+          'coordinated_workflow and GET /api/registry query by skill, price, reputation, and availability',
+        ledger_entry_type: 'agent_registration',
       },
       stigmergic_ledger: {
         enabled: true,
@@ -214,8 +229,8 @@ export async function buildAgentCard(): Promise<AgentCard> {
         description:
           'Problem: A complex marketing objective requires multiple specialist agents but the orchestrator ' +
           'does not know who is available, at what cost, or in what sequence. Solution: CSA decomposes the main ' +
-          'objective into 2–4 subtasks, searches the stigmergic ledger for agents with prior task/feedback signals, ' +
-          'assembles a recommended team of 2–4 collaborators with estimated costs, and returns a workflow plan ' +
+          'objective into 2–4 subtasks, searches the agent registry and stigmergic ledger for agents by skill, ' +
+          'price, reputation, and availability, assembles a team of 2–4 collaborators with estimated costs, and returns a workflow plan ' +
           'including a 5–10% CSA coordination fee.',
         tags: [
           'coordinated-workflow',
@@ -235,6 +250,53 @@ export async function buildAgentCard(): Promise<AgentCard> {
         ],
         inputSchema: COORDINATED_WORKFLOW_INPUT_SCHEMA as Record<string, unknown>,
         outputSchema: COORDINATED_WORKFLOW_OUTPUT_SCHEMA as Record<string, unknown>,
+      },
+      {
+        id: 'agent_registry',
+        name: 'Agent Registry',
+        description:
+          'Problem: Specialist agents exist in the swarm but orchestrators cannot discover their skills, ' +
+          'pricing, or availability. Solution: Agents register via POST /api/register-agent with skills, ' +
+          'pricing model (hourly, per-task, or fixed), and availability status. Registrations are stored in ' +
+          'the stigmergic ledger and queryable via GET /api/registry — powering coordinated_workflow team matching.',
+        tags: [
+          'agent-registry',
+          'skill-advertising',
+          'agent-discovery',
+          'stigmergic-coordination',
+          'agent-to-agent',
+          'pricing',
+          'availability',
+          'swarm-coordination',
+          'multi-agent',
+        ],
+        examples: [
+          'POST /api/register-agent — register as a convergence specialist at $120/task, availability: available',
+          'GET /api/registry?skill=convergence&availability=available&max_price_usd=150',
+          'GET /api/registry?tag=enterprise&limit=10',
+        ],
+        inputSchema: AGENT_REGISTRATION_INPUT_SCHEMA as Record<string, unknown>,
+        outputSchema: AGENT_REGISTRATION_OUTPUT_SCHEMA as Record<string, unknown>,
+      },
+      {
+        id: 'agent_registry_query',
+        name: 'Agent Registry Query',
+        description:
+          'Search the stigmergic agent registry by skill, availability, max price, agent ID, or tag. ' +
+          'Returns registered agents with reputation signals from ledger task/feedback history. Read-only.',
+        tags: [
+          'agent-registry',
+          'agent-discovery',
+          'skill-search',
+          'pricing-filter',
+          'availability',
+        ],
+        examples: [
+          'GET /api/registry?skill=strategy&availability=available',
+          'GET /api/registry?max_price_usd=100&skill=content',
+        ],
+        inputSchema: AGENT_REGISTRY_QUERY_INPUT_SCHEMA as Record<string, unknown>,
+        outputSchema: AGENT_REGISTRY_QUERY_OUTPUT_SCHEMA as Record<string, unknown>,
       },
       {
         id: 'stigmergic_ledger_query',
