@@ -116,7 +116,7 @@ Vercel works great for v1. For persistent ledger storage across restarts, consid
 
 ```
 csa-agent/
-├── api/index.ts             # Vercel serverless entry point
+├── vercel-entry.ts          # Vercel serverless entry point
 ├── src/
 │   ├── agent/               # Task handler + transition architect logic
 │   ├── feedback/            # Mandatory feedback collection
