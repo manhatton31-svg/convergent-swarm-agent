@@ -47,7 +47,7 @@ export async function handleTask(request: TaskRequest): Promise<TransitionArtifa
     agent_version: config.agentVersion,
     task_type: request.task_type,
     ...sections,
-    stigmergic_ledger_ref: config.ledgerPath,
+    stigmergic_ledger_ref: config.ledgerRef,
     feedback_request: buildFeedbackRequest(taskId),
   };
 

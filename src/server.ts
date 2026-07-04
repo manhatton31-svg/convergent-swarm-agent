@@ -71,7 +71,7 @@ export function createServer() {
     res.status(201).json({
       message: 'Feedback stored in stigmergic ledger',
       entry,
-      ledger_path: config.ledgerPath,
+      ledger_path: config.ledgerRef,
     });
   });
 

@@ -13,7 +13,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const EXAMPLES_DIR = path.resolve(__dirname, '..', 'examples');
-const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+const PRODUCTION_URL = 'https://csa-agent-amber.vercel.app';
 
 async function listExamples(): Promise<string[]> {
   const entries = await fs.readdir(EXAMPLES_DIR, { withFileTypes: true });
@@ -35,9 +35,9 @@ async function runOffline(exampleName: string): Promise<unknown> {
   return handleTask(request as import('../src/types').TaskRequest);
 }
 
-async function runHttp(exampleName: string): Promise<unknown> {
+async function runHttp(exampleName: string, baseUrl: string): Promise<unknown> {
   const request = await loadRequest(exampleName);
-  const res = await fetch(`${BASE_URL}/api/task`, {
+  const res = await fetch(`${baseUrl}/api/task`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -51,10 +51,10 @@ async function runHttp(exampleName: string): Promise<unknown> {
   return res.json();
 }
 
-async function submitSampleFeedback(artifact: {
-  task_id: string;
-  requesting_agent: string;
-}): Promise<void> {
+async function submitSampleFeedback(
+  artifact: { task_id: string; requesting_agent: string },
+  baseUrl: string
+): Promise<void> {
   const feedback = {
     task_id: artifact.task_id,
     requesting_agent: artifact.requesting_agent,
@@ -68,7 +68,7 @@ async function submitSampleFeedback(artifact: {
     },
   };
 
-  const res = await fetch(`${BASE_URL}/api/feedback`, {
+  const res = await fetch(`${baseUrl}/api/feedback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(feedback),
@@ -85,11 +85,11 @@ async function submitSampleFeedback(artifact: {
 
 async function runExample(
   exampleName: string,
-  options: { http: boolean; withFeedback: boolean }
+  options: { http: boolean; withFeedback: boolean; baseUrl: string }
 ): Promise<void> {
   console.log(`\n${'='.repeat(60)}`);
   console.log(`🤖 Simulating agent → CSA | Example: ${exampleName}`);
-  console.log(`   Mode: ${options.http ? 'HTTP' : 'Offline (direct handler)'}`);
+  console.log(`   Mode: ${options.http ? `HTTP → ${options.baseUrl}` : 'Offline (direct handler)'}`);
   console.log('='.repeat(60));
 
   const request = await loadRequest(exampleName);
@@ -97,7 +97,7 @@ async function runExample(
   console.log(JSON.stringify(request, null, 2));
 
   const artifact = (await (options.http
-    ? runHttp(exampleName)
+    ? runHttp(exampleName, options.baseUrl)
     : runOffline(exampleName))) as Record<string, unknown>;
 
   console.log('\n📥 RESPONSE:');
@@ -115,8 +115,19 @@ async function runExample(
     console.log(`   ${artifact[section] ? '✓' : '✗'} ${section}`);
   }
 
+  const feedbackRequest = artifact.feedback_request as { submit_endpoint?: string } | undefined;
+  if (feedbackRequest?.submit_endpoint) {
+    console.log(`\n🔗 submit_endpoint: ${feedbackRequest.submit_endpoint}`);
+  }
+  if (artifact.stigmergic_ledger_ref) {
+    console.log(`🔗 stigmergic_ledger_ref: ${artifact.stigmergic_ledger_ref}`);
+  }
+
   if (options.withFeedback && options.http) {
-    await submitSampleFeedback(artifact as { task_id: string; requesting_agent: string });
+    await submitSampleFeedback(
+      artifact as { task_id: string; requesting_agent: string },
+      options.baseUrl
+    );
   } else if (options.withFeedback && !options.http) {
     console.log('\n💡 Use --http with a running server to test feedback submission.');
   }
@@ -127,6 +138,7 @@ async function main(): Promise<void> {
   const http = args.includes('--http');
   const withFeedback = args.includes('--with-feedback');
   const all = args.includes('--all');
+  const baseUrl = process.env.BASE_URL ?? (http ? PRODUCTION_URL : 'http://localhost:3000');
 
   const exampleIdx = args.indexOf('--example');
   const exampleArg = exampleIdx >= 0 ? args[exampleIdx + 1] : undefined;
@@ -148,7 +160,7 @@ async function main(): Promise<void> {
       console.error(`Available: ${examples.join(', ')}`);
       process.exit(1);
     }
-    await runExample(name, { http, withFeedback });
+    await runExample(name, { http, withFeedback, baseUrl });
   }
 
   console.log('\n🐝 Simulation complete.\n');
