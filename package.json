@@ -1,0 +1,38 @@
+{
+  "name": "convergent-swarm-agent",
+  "version": "1.0.0",
+  "description": "Future-State Transition Architect for marketing — a Convergent Swarm Agent for the agent economy",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "simulate": "tsx scripts/simulate-agent.ts",
+    "simulate:all": "tsx scripts/simulate-agent.ts --all",
+    "feedback": "tsx scripts/submit-feedback.ts",
+    "test:local": "npm run build && npm run simulate",
+    "vercel-build": "npm run build"
+  },
+  "keywords": [
+    "agentverse",
+    "fetch-ai",
+    "marketing",
+    "stigmergy",
+    "multi-agent"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.10",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

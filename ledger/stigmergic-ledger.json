@@ -1,0 +1,153 @@
+{
+  "version": "1.0",
+  "description": "Shared stigmergic ledger — environmental signals left by agents for indirect coordination",
+  "last_updated": "2026-07-04T15:43:10.570Z",
+  "entries": [
+    {
+      "type": "task",
+      "task_id": "aaf1af8a-cf46-4afd-aaec-6eb52a33c6d1",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:31:08.569Z",
+      "task_type": "future_state_transition",
+      "business_name": "PipelineIQ",
+      "summary": "PipelineIQ operates a \"Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency\" model in B2B SaaS — sales enablement, with agent-economy readiness score 40/100.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "e0949952-daaf-45a0-8f28-c205b55008e4",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:31:17.094Z",
+      "task_type": "future_state_transition",
+      "business_name": "PipelineIQ",
+      "summary": "PipelineIQ operates a \"Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency\" model in B2B SaaS — sales enablement, with agent-economy readiness score 40/100.",
+      "readiness_score": 40
+    },
+    {
+      "type": "feedback",
+      "task_id": "e0949952-daaf-45a0-8f28-c205b55008e4",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:31:17.109Z",
+      "satisfaction_score": 8,
+      "improvement_suggestion": "Include industry-specific agent marketplace references and competitor benchmarks.",
+      "roadmap_principle": "adjacent_possible",
+      "roadmap_principle_rationale": "Exploring adjacent capability spaces would help us discover non-obvious convergence partners in the agent economy."
+    },
+    {
+      "type": "task",
+      "task_id": "f0513016-e5e2-43e1-b991-08366491b767",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:35:31.175Z",
+      "task_type": "future_state_transition",
+      "business_name": "PipelineIQ",
+      "summary": "PipelineIQ operates a \"Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency\" model in B2B SaaS — sales enablement, with agent-economy readiness score 40/100.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "a8f2f68d-fad4-4975-b779-e207678de25c",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:38:27.447Z",
+      "task_type": "future_state_transition",
+      "business_name": "PipelineIQ",
+      "summary": "PipelineIQ operates \"Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency\" in B2B SaaS — sales enablement. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "fb075925-c090-4e52-804b-6546804a0650",
+      "requesting_agent": "creative-brief-agent",
+      "timestamp": "2026-07-04T15:38:27.451Z",
+      "task_type": "convergence_analysis",
+      "business_name": "Brightline Digital Agency",
+      "summary": "Brightline Digital Agency operates \"Full-service agency retainer: brand strategy, creative production, and media buying as separate workstreams with monthly client syncs\" in Marketing agency — DTC e-commerce clients. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "5799e205-a8f9-45c1-8ff9-ba316523a2f2",
+      "requesting_agent": "procurement-scout-agent",
+      "timestamp": "2026-07-04T15:38:27.454Z",
+      "task_type": "strategy_evolution",
+      "business_name": "NexaCompliance",
+      "summary": "NexaCompliance operates \"Traditional enterprise marketing: analyst relations, conference sponsorships, and account-based marketing managed in Salesforce\" in RegTech — financial compliance automation. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "218e56ed-c968-4516-bad2-18aff3cf99cd",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:39:30.034Z",
+      "task_type": "future_state_transition",
+      "business_name": "PipelineIQ",
+      "summary": "PipelineIQ operates \"Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency\" in B2B SaaS — sales enablement. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "62dbeac1-034c-4a76-97c9-edde8b9a897b",
+      "requesting_agent": "creative-brief-agent",
+      "timestamp": "2026-07-04T15:39:30.052Z",
+      "task_type": "convergence_analysis",
+      "business_name": "Brightline Digital Agency",
+      "summary": "Brightline Digital Agency operates \"Full-service agency retainer: brand strategy, creative production, and media buying as separate workstreams with monthly client syncs\" in Marketing agency — DTC e-commerce clients. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "174cb390-762b-44eb-983f-c3edfca0f533",
+      "requesting_agent": "procurement-scout-agent",
+      "timestamp": "2026-07-04T15:39:30.070Z",
+      "task_type": "strategy_evolution",
+      "business_name": "NexaCompliance",
+      "summary": "NexaCompliance operates \"Traditional enterprise marketing: analyst relations, conference sponsorships, and account-based marketing managed in Salesforce\" in RegTech — financial compliance automation. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "c5af4a14-c093-4c92-b950-ebf377b0ca0c",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:40:15.919Z",
+      "task_type": "future_state_transition",
+      "business_name": "PipelineIQ",
+      "summary": "PipelineIQ operates \"Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency\" in B2B SaaS — sales enablement. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "29df5cba-0f2d-4e18-b1cf-02510d7a0c57",
+      "requesting_agent": "creative-brief-agent",
+      "timestamp": "2026-07-04T15:40:15.936Z",
+      "task_type": "convergence_analysis",
+      "business_name": "Brightline Digital Agency",
+      "summary": "Brightline Digital Agency operates \"Full-service agency retainer: brand strategy, creative production, and media buying as separate workstreams with monthly client syncs\" in Marketing agency — DTC e-commerce clients. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "88921dfe-2c67-4cd4-a68e-b1008e3e2852",
+      "requesting_agent": "procurement-scout-agent",
+      "timestamp": "2026-07-04T15:40:15.954Z",
+      "task_type": "strategy_evolution",
+      "business_name": "NexaCompliance",
+      "summary": "NexaCompliance operates \"Traditional enterprise marketing: analyst relations, conference sponsorships, and account-based marketing managed in Salesforce\" in RegTech — financial compliance automation. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    },
+    {
+      "type": "task",
+      "task_id": "f6dfd4ff-4e35-4880-bbab-0de769ee9b7a",
+      "requesting_agent": "growth-strategist-agent-v2",
+      "timestamp": "2026-07-04T15:43:10.569Z",
+      "task_type": "future_state_transition",
+      "business_name": "PipelineIQ",
+      "summary": "PipelineIQ operates \"Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency\" in B2B SaaS — sales enablement. Agent-economy readiness: 40/100. The core issue is not marketing quality — it is marketing legibility to machines.",
+      "readiness_score": 40
+    }
+  ],
+  "aggregate_insights": {
+    "total_tasks": 13,
+    "total_feedback": 1,
+    "average_satisfaction": 8,
+    "most_requested_roadmap_principle": "adjacent_possible"
+  }
+}

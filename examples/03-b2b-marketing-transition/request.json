@@ -1,0 +1,22 @@
+{
+  "requesting_agent": "procurement-scout-agent",
+  "task_type": "strategy_evolution",
+  "context": {
+    "business_name": "NexaCompliance",
+    "industry": "RegTech — financial compliance automation",
+    "current_marketing_model": "Traditional enterprise marketing: analyst relations, conference sponsorships, and account-based marketing managed in Salesforce",
+    "current_channels": ["Gartner/Forrester briefings", "FinTech conferences", "ABM via 6sense", "partner co-marketing"],
+    "target_audience": "Chief Compliance Officers and Heads of Regulatory Affairs at tier-1 banks",
+    "goals": [
+      "Evolve from conference-dependent pipeline to always-on agent-discoverable presence",
+      "Make compliance capability catalog machine-readable for procurement agents",
+      "Maintain enterprise trust while increasing automation"
+    ],
+    "constraints": [
+      "Heavy regulatory review on all public-facing content",
+      "18-month enterprise sales cycles",
+      "Limited brand awareness outside existing client base"
+    ],
+    "additional_context": "Competitors are beginning to publish agent-callable API documentation for their compliance modules. NexaCompliance has APIs but no agent-facing discovery layer."
+  }
+}

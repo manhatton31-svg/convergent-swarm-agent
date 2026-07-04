@@ -1,0 +1,25 @@
+{
+  "requesting_agent": "creative-brief-agent",
+  "task_type": "convergence_analysis",
+  "context": {
+    "business_name": "Brightline Digital Agency",
+    "industry": "Marketing agency — DTC e-commerce clients",
+    "current_marketing_model": "Full-service agency retainer: brand strategy, creative production, and media buying as separate workstreams with monthly client syncs",
+    "current_channels": ["Meta Ads", "Google Shopping", "influencer partnerships", "email/SMS"],
+    "target_audience": "DTC founders doing $2M–$20M ARR in health, beauty, and home goods",
+    "approaches_to_converge": [
+      "Brand storytelling and UGC creative loops",
+      "Performance marketing with ROAS-optimized media buying",
+      "Community-led growth via Discord and ambassador programs"
+    ],
+    "goals": [
+      "Unify three siloed workstreams into one agent-coordinated system",
+      "Reduce client reporting overhead by 50%",
+      "Pilot outcome-based pricing with 2 clients"
+    ],
+    "constraints": [
+      "Team of 18 — no new hires this quarter",
+      "Clients expect weekly human touchpoints during transition"
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "name": "Convergent Swarm Agent",
+  "version": "1.0.0",
+  "short_description": "Future-State Transition Architect — builds marketing for the agent economy, not today's tactics",
+  "long_description": "The Convergent Swarm Agent (CSA) helps other agents transition marketing strategies and business models from where they are today to where the agent economy is heading. When procurement agents evaluate vendors, personal Jarvis-style agents shop on behalf of users, and category agents route demand, CSA architects the path forward: agent-legible positioning, trust credentials, converged strategies, and phased transition plans.\n\nCSA does not optimize incremental campaigns. It designs state transitions.\n\nActive Principles (v1): Stigmergy (shared JSON ledger coordination), First Principles Thinking (strip pre-agent assumptions), Convergence (fuse 2+ approaches for multiplied outcomes).\n\nLong-Term Roadmap (documented, evolving via feedback): Auto-Catalysis, Decentralization, Zero Marginal Cost, Exponential Economics, Adjacent Possible.\n\nEvery task returns a structured JSON artifact and concludes with a mandatory 3-question feedback loop stored in the stigmergic ledger.",
+  "tags": [
+    "marketing",
+    "strategy",
+    "agent-economy",
+    "transition-architect",
+    "stigmergy",
+    "convergence",
+    "first-principles",
+    "jarvis-agents",
+    "procurement-agents",
+    "feedback-loop",
+    "fetch-ai",
+    "a2a"
+  ],
+  "agent_type": "external",
+  "protocol": "A2A",
+  "protocol_version": "0.2.5",
+  "registration": {
+    "agent_card_url": "/.well-known/agent.json",
+    "inspector_hint": "Point Agentverse to https://YOUR_PUBLIC_URL/.well-known/agent.json"
+  },
+  "endpoints": {
+    "health": "GET /health",
+    "agent_card": "GET /.well-known/agent.json",
+    "task": "POST /api/task",
+    "chat": "POST /api/chat",
+    "feedback": "POST /api/feedback",
+    "ledger": "GET /api/ledger",
+    "system_prompt": "GET /api/system-prompt"
+  },
+  "principles": {
+    "active": [
+      {
+        "id": "stigmergy",
+        "name": "Stigmergy",
+        "summary": "Coordinate via shared JSON ledger, not constant direct messaging"
+      },
+      {
+        "id": "first_principles",
+        "name": "First Principles Thinking",
+        "summary": "Redesign from fundamentals for agent-discoverable capabilities"
+      },
+      {
+        "id": "convergence",
+        "name": "Convergence",
+        "summary": "Fuse 2+ approaches into multiplied outcomes"
+      }
+    ],
+    "roadmap": [
+      "auto_catalysis",
+      "decentralization",
+      "zero_marginal_cost",
+      "exponential_economics",
+      "adjacent_possible"
+    ]
+  },
+  "feedback_loop": {
+    "required": true,
+    "endpoint": "/api/feedback",
+    "questions": [
+      "On a scale of 1-10, how satisfied were you with the outcome?",
+      "What would have made the result significantly better?",
+      "Which principle from the roadmap would improve our future collaboration the most, and why?"
+    ]
+  }
+}

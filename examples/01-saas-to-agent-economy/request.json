@@ -1,0 +1,25 @@
+{
+  "requesting_agent": "growth-strategist-agent-v2",
+  "task_type": "future_state_transition",
+  "context": {
+    "business_name": "PipelineIQ",
+    "industry": "B2B SaaS — sales enablement",
+    "current_marketing_model": "Human-led demand gen with SDR outbound, quarterly content campaigns, and paid LinkedIn ads managed by an external agency",
+    "current_channels": ["LinkedIn Ads", "SDR outbound", "blog/SEO", "webinars"],
+    "target_audience": "VP Sales and RevOps leaders at mid-market SaaS companies (200-2000 employees)",
+    "constraints": [
+      "Cannot replace SDR team in next 6 months",
+      "Must maintain SOC 2 compliant data handling",
+      "Marketing budget capped at $40k/month"
+    ],
+    "goals": [
+      "Reduce CAC by 25% within 12 months",
+      "Become discoverable by procurement agents in the agent economy",
+      "Enable autonomous A/B testing of positioning"
+    ]
+  },
+  "metadata": {
+    "priority": "high",
+    "requested_by": "CMO via orchestrator agent"
+  }
+}
