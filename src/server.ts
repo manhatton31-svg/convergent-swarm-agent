@@ -2,6 +2,11 @@ import express, { Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { buildAgentCard } from './agent/agent-card';
+import {
+  FEEDBACK_INPUT_SCHEMA,
+  TASK_REQUEST_INPUT_SCHEMA,
+  TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
+} from './schemas/task-schemas';
 import { handleTask, parseChatToTask, TaskValidationError } from './agent/task-handler';
 import { config } from './config';
 import { storeFeedback, validateFeedback } from './feedback/feedback';
@@ -30,6 +35,14 @@ export function createServer() {
     res.json(buildAgentCard());
   });
 
+  app.get('/api/schemas', (_req: Request, res: Response) => {
+    res.json({
+      task_request: TASK_REQUEST_INPUT_SCHEMA,
+      transition_artifact: TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
+      feedback_submission: FEEDBACK_INPUT_SCHEMA,
+    });
+  });
+
   app.get('/api/system-prompt', async (_req: Request, res: Response) => {
     try {
       const prompt = await fs.readFile(config.systemPromptPath, 'utf-8');
@@ -46,7 +59,7 @@ export function createServer() {
 
   app.post('/api/task', async (req: Request, res: Response) => {
     try {
-      const artifact = await handleTask(req.body as TaskRequest);
+      const artifact = await handleTask(req.body);
       res.status(200).json(artifact);
     } catch (err) {
       if (err instanceof TaskValidationError) {

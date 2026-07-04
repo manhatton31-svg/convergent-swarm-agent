@@ -1,5 +1,15 @@
 import { config } from '../config';
+import {
+  FEEDBACK_INPUT_SCHEMA,
+  TASK_REQUEST_INPUT_SCHEMA,
+  TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
+} from '../schemas/task-schemas';
 import type { AgentCard } from '../types';
+
+const taskSchemas = {
+  inputSchema: TASK_REQUEST_INPUT_SCHEMA as Record<string, unknown>,
+  outputSchema: TRANSITION_ARTIFACT_OUTPUT_SCHEMA as Record<string, unknown>,
+};
 
 export function buildAgentCard(): AgentCard {
   return {
@@ -85,6 +95,11 @@ export function buildAgentCard(): AgentCard {
           'Design a future state where personal Jarvis agents can evaluate, trial, and shortlist our product without SDR involvement',
           'Analyze agent-economy readiness for Acme Corp — industry fintech, model subscription SaaS, channels LinkedIn and SEO',
         ],
+        inputSchema: {
+          ...taskSchemas.inputSchema,
+          description: 'Set task_type to "future_state_transition" for full transition planning',
+        },
+        outputSchema: taskSchemas.outputSchema,
       },
       {
         id: 'convergence_analysis',
@@ -104,6 +119,11 @@ export function buildAgentCard(): AgentCard {
           'Converge content-led growth, performance marketing, and community programs into one agent-coordinated system',
           'Fuse brand storytelling with programmatic media buying via a proof-gated spend engine for DTC',
         ],
+        inputSchema: {
+          ...taskSchemas.inputSchema,
+          description: 'Set task_type to "convergence_analysis" and include approaches_to_converge (2+ items)',
+        },
+        outputSchema: taskSchemas.outputSchema,
       },
       {
         id: 'strategy_evolution',
@@ -122,6 +142,11 @@ export function buildAgentCard(): AgentCard {
           'Evolve our agency retainer model toward outcome-based agent contracts verifiable by client procurement agents',
           'Reposition enterprise marketing from conference-dependent to always-on trust publishing for agent discovery',
         ],
+        inputSchema: {
+          ...taskSchemas.inputSchema,
+          description: 'Set task_type to "strategy_evolution" for first-principles strategy refresh',
+        },
+        outputSchema: taskSchemas.outputSchema,
       },
       {
         id: 'feedback_and_evolution',
@@ -133,6 +158,16 @@ export function buildAgentCard(): AgentCard {
         examples: [
           'Submit feedback for task abc-123 with satisfaction score and roadmap principle preference',
         ],
+        inputSchema: FEEDBACK_INPUT_SCHEMA as Record<string, unknown>,
+        outputSchema: {
+          type: 'object',
+          required: ['message', 'entry', 'ledger_path'],
+          properties: {
+            message: { type: 'string' },
+            entry: { type: 'object' },
+            ledger_path: { type: 'string' },
+          },
+        },
       },
     ],
   };

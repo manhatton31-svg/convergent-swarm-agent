@@ -7,45 +7,51 @@ import type {
   TaskRequest,
   TransitionArtifact,
 } from '../types';
+import { TASK_REQUEST_INPUT_SCHEMA } from '../schemas/task-schemas';
+import { validateAgainstSchema } from '../schemas/validate';
 import { buildArtifactSections } from './architect';
 
-export function validateTaskRequest(request: TaskRequest): string[] {
+export function validateTaskRequest(request: unknown): string[] {
+  const schemaErrors = validateAgainstSchema(TASK_REQUEST_INPUT_SCHEMA, request);
+  if (schemaErrors.length > 0) {
+    return schemaErrors.map((e) => `Schema: ${e}`);
+  }
+
+  const req = request as TaskRequest;
   const errors: string[] = [];
 
-  if (!request.requesting_agent?.trim()) {
-    errors.push('requesting_agent is required — identify which agent is calling');
-  }
-  if (!request.task_type) {
-    errors.push('task_type is required');
-  }
-  if (!request.context?.current_marketing_model?.trim()) {
-    errors.push('context.current_marketing_model is required');
+  if (!req.context?.current_marketing_model?.trim()) {
+    errors.push('context.current_marketing_model must be a non-empty string');
   }
 
-  const validTypes = ['future_state_transition', 'convergence_analysis', 'strategy_evolution'];
-  if (request.task_type && !validTypes.includes(request.task_type)) {
-    errors.push(`task_type must be one of: ${validTypes.join(', ')}`);
+  if (
+    req.task_type === 'convergence_analysis' &&
+    req.context.approaches_to_converge &&
+    req.context.approaches_to_converge.length < 2
+  ) {
+    errors.push('convergence_analysis requires approaches_to_converge with at least 2 items');
   }
 
   return errors;
 }
 
-export async function handleTask(request: TaskRequest): Promise<TransitionArtifact> {
+export async function handleTask(request: unknown): Promise<TransitionArtifact> {
   const errors = validateTaskRequest(request);
   if (errors.length > 0) {
     throw new TaskValidationError(errors);
   }
 
-  const taskId = request.task_id ?? uuidv4();
-  const sections = buildArtifactSections(request.context, request.task_type);
+  const req = request as TaskRequest;
+  const taskId = req.task_id ?? uuidv4();
+  const sections = buildArtifactSections(req.context, req.task_type);
 
   const artifact: TransitionArtifact = {
     task_id: taskId,
     generated_at: new Date().toISOString(),
-    requesting_agent: request.requesting_agent,
+    requesting_agent: req.requesting_agent,
     agent_name: config.agentName,
     agent_version: config.agentVersion,
-    task_type: request.task_type,
+    task_type: req.task_type,
     ...sections,
     stigmergic_ledger_ref: config.ledgerRef,
     feedback_request: buildFeedbackRequest(taskId),
@@ -54,10 +60,10 @@ export async function handleTask(request: TaskRequest): Promise<TransitionArtifa
   const ledgerEntry: LedgerTaskEntry = {
     type: 'task',
     task_id: taskId,
-    requesting_agent: request.requesting_agent,
+    requesting_agent: req.requesting_agent,
     timestamp: artifact.generated_at,
-    task_type: request.task_type,
-    business_name: request.context.business_name,
+    task_type: req.task_type,
+    business_name: req.context.business_name,
     summary: sections.current_state_analysis.summary,
     readiness_score: sections.current_state_analysis.agent_economy_readiness_score,
   };

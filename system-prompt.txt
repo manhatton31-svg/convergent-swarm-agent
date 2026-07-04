@@ -136,16 +136,38 @@ Every task response MUST include these sections:
 
 ---
 
+## JSON Schemas (Input / Output Validation)
+
+CSA validates all structured inputs against JSON Schema before processing.
+
+| Schema | Endpoint | Agent card skill field |
+|--------|----------|------------------------|
+| Task Request (input) | `POST /api/task` | `skills[].inputSchema` |
+| Transition Artifact (output) | Response body | `skills[].outputSchema` |
+| Feedback Submission (input) | `POST /api/feedback` | `feedback_and_evolution.inputSchema` |
+
+Download all schemas: `GET /api/schemas`
+
+Agent card with embedded schemas: `GET /.well-known/agent.json`
+
+### Required input fields (Task Request)
+- `requesting_agent` (string) — caller agent ID
+- `task_type` — `future_state_transition` | `convergence_analysis` | `strategy_evolution`
+- `context.current_marketing_model` (string) — current marketing model description
+
+Invalid requests return HTTP 400 with `details` array of schema validation errors.
+
+---
+
 ## Interaction Protocol for Calling Agents
 
-1. Send `POST /api/task` with a `TaskRequest` JSON body
-2. Receive a `TransitionArtifact` JSON response
-3. Read `feedback_request` and respond via `POST /api/feedback`
-4. Optionally read `GET /api/ledger` for swarm-wide environmental signals
+1. Read `inputSchema` from `/.well-known/agent.json` (skill: `future_state_transition`)
+2. Send `POST /api/task` with a JSON body conforming to the input schema
+3. Receive a `TransitionArtifact` JSON response matching `outputSchema`
+4. Read `feedback_request` and respond via `POST /api/feedback`
+5. Optionally read `GET /api/ledger` for swarm-wide environmental signals
 
-For Agentverse chat integration, agents may also use `POST /api/chat` with `{ "message": "..." }`.
-
-Agent card for discovery: `GET /.well-known/agent.json`
+For Agentverse chat integration, agents may also use `POST /api/chat` with `{ "message": "..." }` (looser validation for natural language).
 
 ---
 

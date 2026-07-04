@@ -180,5 +180,7 @@ export interface AgentCard {
     description: string;
     tags: string[];
     examples: string[];
+    inputSchema?: Record<string, unknown>;
+    outputSchema?: Record<string, unknown>;
   }>;
 }

@@ -1,5 +1,7 @@
 import { config } from '../config';
 import { appendLedgerEntry } from '../ledger/stigmergic-ledger';
+import { FEEDBACK_INPUT_SCHEMA } from '../schemas/task-schemas';
+import { validateAgainstSchema } from '../schemas/validate';
 import type { FeedbackRequest, FeedbackSubmission, LedgerFeedbackEntry } from '../types';
 
 /** The exact 3 mandatory feedback questions */
@@ -45,40 +47,12 @@ export function buildFeedbackRequest(taskId: string): FeedbackRequest {
   };
 }
 
-export function validateFeedback(submission: FeedbackSubmission): string[] {
-  const errors: string[] = [];
-  const { responses } = submission;
-
-  if (!submission.task_id) errors.push('task_id is required');
-  if (!submission.requesting_agent) errors.push('requesting_agent is required');
-
-  if (responses.satisfaction_score == null) {
-    errors.push('satisfaction_score is required');
-  } else if (
-    !Number.isInteger(responses.satisfaction_score) ||
-    responses.satisfaction_score < 1 ||
-    responses.satisfaction_score > 10
-  ) {
-    errors.push('satisfaction_score must be an integer between 1 and 10');
+export function validateFeedback(submission: unknown): string[] {
+  const schemaErrors = validateAgainstSchema(FEEDBACK_INPUT_SCHEMA, submission);
+  if (schemaErrors.length > 0) {
+    return schemaErrors.map((e) => `Schema: ${e}`);
   }
-
-  if (!responses.improvement_suggestion?.trim()) {
-    errors.push('improvement_suggestion is required');
-  }
-
-  if (!responses.roadmap_principle) {
-    errors.push('roadmap_principle is required');
-  } else if (!ROADMAP_PRINCIPLES.includes(responses.roadmap_principle)) {
-    errors.push(
-      `roadmap_principle must be one of: ${ROADMAP_PRINCIPLES.join(', ')}`
-    );
-  }
-
-  if (!responses.roadmap_principle_rationale?.trim()) {
-    errors.push('roadmap_principle_rationale is required (explain why)');
-  }
-
-  return errors;
+  return [];
 }
 
 export async function storeFeedback(submission: FeedbackSubmission): Promise<LedgerFeedbackEntry> {
