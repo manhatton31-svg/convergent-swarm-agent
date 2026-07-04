@@ -111,6 +111,23 @@ Calling agents should read `pricing` on the agent card before integration planni
 
 ---
 
+## Versioning & Changelog
+
+CSA tracks its own semantic version (currently **1.0.0**, defined in `src/version.ts`). The version appears on:
+
+- Agent card (`version` field and `capabilities.versioning`)
+- Health endpoint (`version` field)
+- Every task artifact (`agent_version` field)
+
+A public changelog is maintained at the project root (`CHANGELOG.md`) and exposed via API:
+
+- `GET /changelog` — Markdown changelog (same content as the repository file)
+- GitHub: `https://github.com/manhatton31-svg/convergent-swarm-agent/blob/master/CHANGELOG.md`
+
+Calling agents should check `capabilities.versioning` on the agent card (or `GET /health`) to detect version changes before integrating. Review the changelog when upgrading integrations.
+
+---
+
 ## Output Artifact Structure
 
 Every task response MUST include these sections:
@@ -234,6 +251,7 @@ Common error codes: `VALIDATION_FAILED`, `INVALID_REQUEST`, `INVALID_LEDGER_QUER
 6. For swarm context only: use skill `stigmergic_ledger_query` and `GET /api/ledger` with query filters (read-only)
 7. Check `reputation` on the agent card for trust signals (`totalTasksCompleted`, `averageSatisfactionScore`, `feedbackCount`, `lastActive`)
 8. Read `pricing` on the agent card to confirm cost expectations (`model`, `notes`)
+9. Check `capabilities.versioning` or `GET /changelog` when evaluating upgrades or breaking changes
 
 For Agentverse chat integration, agents may also use `POST /api/chat` with `{ "message": "..." }` (looser validation for natural language).
 

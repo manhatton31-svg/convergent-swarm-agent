@@ -1,4 +1,5 @@
 import path from 'path';
+import { VERSION } from './version';
 
 /** Canonical production URL — used when deployed on Vercel without PUBLIC_URL set */
 const PRODUCTION_URL = 'https://csa-agent-amber.vercel.app';
@@ -51,7 +52,8 @@ export const config = {
   host: process.env.HOST ?? '0.0.0.0',
   publicUrl,
   agentName: process.env.AGENT_NAME ?? 'Convergent Swarm Agent',
-  agentVersion: process.env.AGENT_VERSION ?? '1.0.0',
+  agentVersion: process.env.AGENT_VERSION ?? VERSION,
+  changelogPath: path.resolve(process.cwd(), 'CHANGELOG.md'),
   environment: resolveEnvironment(),
   ledgerMode: resolveLedgerMode(),
   ledgerPath: resolveLedgerPath(),

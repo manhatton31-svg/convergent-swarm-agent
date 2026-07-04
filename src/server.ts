@@ -74,6 +74,15 @@ export function createServer() {
     }
   });
 
+  app.get('/changelog', async (_req: Request, res: Response) => {
+    try {
+      const changelog = await fs.readFile(config.changelogPath, 'utf-8');
+      res.type('text/markdown').send(changelog);
+    } catch {
+      sendError(res, 404, ErrorCode.NOT_FOUND, 'CHANGELOG.md not found');
+    }
+  });
+
   app.get('/api/ledger', async (req: Request, res: Response) => {
     const { query, errors } = parseLedgerQuery(req.query as Record<string, unknown>);
 
@@ -165,6 +174,7 @@ export function createServer() {
         feedback: 'POST /api/feedback',
         ledger: 'GET /api/ledger?task_type&principle&requesting_agent&since&limit',
         agent_card: 'GET /.well-known/agent.json',
+        changelog: 'GET /changelog',
         health: 'GET /health',
         status: 'GET /status',
       },

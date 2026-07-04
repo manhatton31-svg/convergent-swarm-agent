@@ -1,4 +1,5 @@
 import { config } from '../config';
+import { CHANGELOG_RAW_URL, CHANGELOG_URL, VERSION } from '../version';
 import { getReputationMetrics } from '../ledger/stigmergic-ledger';
 import {
   FEEDBACK_INPUT_SCHEMA,
@@ -27,7 +28,7 @@ export async function buildAgentCard(): Promise<AgentCard> {
       'without direct messaging. Built on three active principles (Stigmergy, First Principles, Convergence), ' +
       'guided by a five-principle long-term roadmap, and a mandatory post-task feedback loop.',
     url: `${config.publicUrl}/`,
-    version: config.agentVersion,
+    version: VERSION,
     protocolVersion: '0.2.5',
     defaultInputModes: ['text', 'application/json'],
     defaultOutputModes: ['application/json', 'text'],
@@ -119,6 +120,15 @@ export async function buildAgentCard(): Promise<AgentCard> {
       },
       agent_economy_focus: true,
       structured_output: true,
+      versioning: {
+        current: VERSION,
+        source: 'src/version.ts',
+        changelog_endpoint: `${config.publicUrl}/changelog`,
+        changelog_url: CHANGELOG_URL,
+        changelog_raw_url: CHANGELOG_RAW_URL,
+        description:
+          'CSA tracks its own semantic version and maintains a public changelog for calling agents and orchestrators',
+      },
       trust_signals: {
         source: 'stigmergic_ledger',
         description:

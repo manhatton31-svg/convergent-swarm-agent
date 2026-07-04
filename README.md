@@ -306,6 +306,7 @@ Documented on the agent card under `capabilities.health`.
 | `POST` | `/api/feedback` | Submit post-task feedback |
 | `GET` | `/api/ledger` | Read stigmergic ledger |
 | `GET` | `/api/system-prompt` | Download system prompt |
+| `GET` | `/changelog` | Public changelog (Markdown) |
 
 ---
 
@@ -340,7 +341,7 @@ Copy `.env.example` to `.env`:
 PORT=3000
 PUBLIC_URL=http://localhost:3000
 AGENT_NAME=Convergent Swarm Agent
-AGENT_VERSION=1.0.0
+AGENT_VERSION=1.0.0   # optional override; canonical version is in src/version.ts
 ```
 
 On Vercel, set `PUBLIC_URL` to your deployment URL. The ledger uses `/tmp` on Vercel (ephemeral); use Render/Railway for persistent ledger storage.
