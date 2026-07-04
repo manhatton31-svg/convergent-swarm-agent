@@ -190,7 +190,18 @@ Agent card with embedded schemas: `GET /.well-known/agent.json`
 - `task_type` — `future_state_transition` | `convergence_analysis` | `strategy_evolution`
 - `context.current_marketing_model` (string) — current marketing model description
 
-Invalid requests return HTTP 400 with `details` array of schema validation errors.
+Invalid requests return a standardized JSON error body:
+
+```json
+{
+  "error": true,
+  "code": "VALIDATION_FAILED",
+  "message": "Task request validation failed",
+  "details": ["Schema: ..."]
+}
+```
+
+Common error codes: `VALIDATION_FAILED`, `INVALID_REQUEST`, `INVALID_LEDGER_QUERY`, `NOT_FOUND`, `INTERNAL_ERROR`.
 
 ---
 

@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { ApiError, ErrorCode } from '../errors/api-error';
 import { config } from '../config';
 import { buildFeedbackRequest } from '../feedback/feedback';
 import { appendLedgerEntry } from '../ledger/stigmergic-ledger';
@@ -110,9 +111,14 @@ function extractField(text: string, field: string): string | undefined {
   return match?.[1]?.trim();
 }
 
-export class TaskValidationError extends Error {
+export class TaskValidationError extends ApiError {
   constructor(public readonly errors: string[]) {
-    super(`Invalid task request: ${errors.join('; ')}`);
+    super(
+      ErrorCode.VALIDATION_FAILED,
+      'Task request validation failed',
+      400,
+      errors
+    );
     this.name = 'TaskValidationError';
   }
 }

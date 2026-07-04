@@ -1,3 +1,4 @@
+import { ApiError, ErrorCode } from '../errors/api-error';
 import { config } from '../config';
 import { appendLedgerEntry } from '../ledger/stigmergic-ledger';
 import { FEEDBACK_INPUT_SCHEMA } from '../schemas/task-schemas';
@@ -53,6 +54,26 @@ export function validateFeedback(submission: unknown): string[] {
     return schemaErrors.map((e) => `Schema: ${e}`);
   }
   return [];
+}
+
+export class FeedbackValidationError extends ApiError {
+  constructor(public readonly errors: string[]) {
+    super(
+      ErrorCode.VALIDATION_FAILED,
+      'Feedback submission validation failed',
+      400,
+      errors
+    );
+    this.name = 'FeedbackValidationError';
+  }
+}
+
+export function assertValidFeedback(submission: unknown): FeedbackSubmission {
+  const errors = validateFeedback(submission);
+  if (errors.length > 0) {
+    throw new FeedbackValidationError(errors);
+  }
+  return submission as FeedbackSubmission;
 }
 
 export async function storeFeedback(submission: FeedbackSubmission): Promise<LedgerFeedbackEntry> {

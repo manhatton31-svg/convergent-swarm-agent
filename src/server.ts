@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { buildAgentCard } from './agent/agent-card';
@@ -7,11 +7,21 @@ import {
   TASK_REQUEST_INPUT_SCHEMA,
   TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
 } from './schemas/task-schemas';
-import { handleTask, parseChatToTask, TaskValidationError } from './agent/task-handler';
+import { handleTask, parseChatToTask } from './agent/task-handler';
 import { config } from './config';
-import { storeFeedback, validateFeedback } from './feedback/feedback';
+import { ErrorCode, handleRouteError, sendError } from './errors/api-error';
+import { assertValidFeedback, storeFeedback } from './feedback/feedback';
 import { parseLedgerQuery, queryLedger } from './ledger/stigmergic-ledger';
-import type { FeedbackSubmission, TaskRequest } from './types';
+import type { TaskRequest } from './types';
+
+const LEDGER_QUERY_USAGE = {
+  task_type: 'future_state_transition | convergence_analysis | strategy_evolution',
+  principle:
+    'auto_catalysis | decentralization | zero_marginal_cost | exponential_economics | adjacent_possible',
+  requesting_agent: 'agent identifier string',
+  since: 'ISO-8601 timestamp (entries on or after this time)',
+  limit: 'positive integer, max 100 (default 50)',
+};
 
 export function createServer() {
   const app = express();
@@ -28,11 +38,19 @@ export function createServer() {
   });
 
   app.get('/.well-known/agent.json', async (_req: Request, res: Response) => {
-    res.json(await buildAgentCard());
+    try {
+      res.json(await buildAgentCard());
+    } catch (err) {
+      handleRouteError(res, err, 'Agent card error');
+    }
   });
 
   app.get('/api/agent-card', async (_req: Request, res: Response) => {
-    res.json(await buildAgentCard());
+    try {
+      res.json(await buildAgentCard());
+    } catch (err) {
+      handleRouteError(res, err, 'Agent card error');
+    }
   });
 
   app.get('/api/schemas', (_req: Request, res: Response) => {
@@ -48,7 +66,7 @@ export function createServer() {
       const prompt = await fs.readFile(config.systemPromptPath, 'utf-8');
       res.type('text/plain').send(prompt);
     } catch {
-      res.status(404).json({ error: 'system-prompt.txt not found' });
+      sendError(res, 404, ErrorCode.NOT_FOUND, 'system-prompt.txt not found');
     }
   });
 
@@ -56,22 +74,22 @@ export function createServer() {
     const { query, errors } = parseLedgerQuery(req.query as Record<string, unknown>);
 
     if (errors.length > 0) {
-      res.status(400).json({
-        error: 'Invalid ledger query parameters',
-        details: errors,
-        usage: {
-          task_type: 'future_state_transition | convergence_analysis | strategy_evolution',
-          principle: 'auto_catalysis | decentralization | zero_marginal_cost | exponential_economics | adjacent_possible',
-          requesting_agent: 'agent identifier string',
-          since: 'ISO-8601 timestamp (entries on or after this time)',
-          limit: `positive integer, max ${100} (default 50)`,
-        },
-      });
+      sendError(
+        res,
+        400,
+        ErrorCode.INVALID_LEDGER_QUERY,
+        'Invalid ledger query parameters',
+        { validation_errors: errors, usage: LEDGER_QUERY_USAGE }
+      );
       return;
     }
 
-    const result = await queryLedger(query);
-    res.json(result);
+    try {
+      const result = await queryLedger(query);
+      res.json(result);
+    } catch (err) {
+      handleRouteError(res, err, 'Ledger query error');
+    }
   });
 
   app.post('/api/task', async (req: Request, res: Response) => {
@@ -79,30 +97,22 @@ export function createServer() {
       const artifact = await handleTask(req.body);
       res.status(200).json(artifact);
     } catch (err) {
-      if (err instanceof TaskValidationError) {
-        res.status(400).json({ error: 'Validation failed', details: err.errors });
-        return;
-      }
-      console.error('Task error:', err);
-      res.status(500).json({ error: 'Internal server error' });
+      handleRouteError(res, err, 'Task error');
     }
   });
 
   app.post('/api/feedback', async (req: Request, res: Response) => {
-    const submission = req.body as FeedbackSubmission;
-    const errors = validateFeedback(submission);
-
-    if (errors.length > 0) {
-      res.status(400).json({ error: 'Validation failed', details: errors });
-      return;
+    try {
+      const submission = assertValidFeedback(req.body);
+      const entry = await storeFeedback(submission);
+      res.status(201).json({
+        message: 'Feedback stored in stigmergic ledger',
+        entry,
+        ledger_path: config.ledgerRef,
+      });
+    } catch (err) {
+      handleRouteError(res, err, 'Feedback error');
     }
-
-    const entry = await storeFeedback(submission);
-    res.status(201).json({
-      message: 'Feedback stored in stigmergic ledger',
-      entry,
-      ledger_path: config.ledgerRef,
-    });
   });
 
   /** Agentverse / A2A-friendly chat endpoint — accepts JSON task or plain text */
@@ -120,9 +130,12 @@ export function createServer() {
       } else if (req.body?.context) {
         task = req.body as TaskRequest;
       } else {
-        res.status(400).json({
-          error: 'Send { message: "..." } or a full TaskRequest JSON body',
-        });
+        sendError(
+          res,
+          400,
+          ErrorCode.INVALID_REQUEST,
+          'Send { message: "..." } or a full TaskRequest JSON body'
+        );
         return;
       }
 
@@ -133,12 +146,7 @@ export function createServer() {
         text_summary: artifact.current_state_analysis.summary,
       });
     } catch (err) {
-      if (err instanceof TaskValidationError) {
-        res.status(400).json({ error: 'Validation failed', details: err.errors });
-        return;
-      }
-      console.error('Chat error:', err);
-      res.status(500).json({ error: 'Internal server error' });
+      handleRouteError(res, err, 'Chat error');
     }
   });
 
@@ -157,6 +165,24 @@ export function createServer() {
       },
       documentation: 'See README.md',
     });
+  });
+
+  app.use((_req: Request, res: Response) => {
+    sendError(res, 404, ErrorCode.NOT_FOUND, 'Endpoint not found');
+  });
+
+  app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+    if (res.headersSent) {
+      next(err);
+      return;
+    }
+
+    if (err instanceof SyntaxError && err.message.includes('JSON')) {
+      sendError(res, 400, ErrorCode.INVALID_REQUEST, 'Malformed JSON request body');
+      return;
+    }
+
+    handleRouteError(res, err, 'Unhandled error');
   });
 
   return app;
