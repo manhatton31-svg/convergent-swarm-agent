@@ -35,12 +35,25 @@ function resolveLedgerRef(publicUrl: string): string {
 
 const publicUrl = resolvePublicUrl();
 
+function resolveEnvironment(): 'production' | 'development' {
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    return 'production';
+  }
+  return 'development';
+}
+
+function resolveLedgerMode(): 'ephemeral' | 'persistent' {
+  return process.env.VERCEL ? 'ephemeral' : 'persistent';
+}
+
 export const config = {
   port: parseInt(process.env.PORT ?? '3000', 10),
   host: process.env.HOST ?? '0.0.0.0',
   publicUrl,
   agentName: process.env.AGENT_NAME ?? 'Convergent Swarm Agent',
   agentVersion: process.env.AGENT_VERSION ?? '1.0.0',
+  environment: resolveEnvironment(),
+  ledgerMode: resolveLedgerMode(),
   ledgerPath: resolveLedgerPath(),
   ledgerRef: resolveLedgerRef(publicUrl),
   systemPromptPath: path.resolve(process.cwd(), 'system-prompt.txt'),

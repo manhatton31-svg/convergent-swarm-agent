@@ -38,6 +38,31 @@ export async function buildAgentCard(): Promise<AgentCard> {
     },
     capabilities: {
       streaming: false,
+      health: {
+        endpoint: `${config.publicUrl}/health`,
+        aliases: [`${config.publicUrl}/status`],
+        description:
+          'Machine-readable health and observability probe for orchestrators and calling agents — ' +
+          'reports operational status, uptime, last activity, ledger state, and capability readiness',
+        response_fields: {
+          status: 'healthy | degraded | unhealthy — overall operational state',
+          version: 'Current agent version string',
+          uptime_seconds: 'Seconds since this server instance started',
+          last_activity: 'ISO-8601 timestamp of most recent task or feedback (null if none)',
+          capabilities_status:
+            'ledger_mode (ephemeral|persistent), schemas_enabled, feedback_loop_enabled, stigmergic_ledger_queryable, system_prompt_available',
+          ledger_status:
+            'entry_count, task_entries, feedback_entries, last_write_time, readable',
+          environment: 'production | development',
+          timestamp: 'ISO-8601 time this health response was generated',
+          agent: 'Agent display name',
+        },
+        status_codes: {
+          '200': 'healthy or degraded — agent is reachable and mostly operational',
+          '503': 'unhealthy — critical dependency failure (e.g. ledger unreadable)',
+        },
+        example: `${config.publicUrl}/health`,
+      },
       feedback_loop: {
         enabled: true,
         required: true,

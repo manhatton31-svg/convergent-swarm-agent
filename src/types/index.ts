@@ -185,6 +185,36 @@ export interface LedgerQueryResult {
   aggregate_insights: StigmergicLedger['aggregate_insights'];
 }
 
+export type HealthStatus = 'healthy' | 'degraded' | 'unhealthy';
+
+export interface HealthCapabilitiesStatus {
+  ledger_mode: 'ephemeral' | 'persistent';
+  schemas_enabled: boolean;
+  feedback_loop_enabled: boolean;
+  stigmergic_ledger_queryable: boolean;
+  system_prompt_available: boolean;
+}
+
+export interface HealthLedgerStatus {
+  entry_count: number;
+  task_entries: number;
+  feedback_entries: number;
+  last_write_time: string | null;
+  readable: boolean;
+}
+
+export interface HealthResponse {
+  status: HealthStatus;
+  version: string;
+  uptime_seconds: number;
+  last_activity: string | null;
+  capabilities_status: HealthCapabilitiesStatus;
+  ledger_status: HealthLedgerStatus;
+  environment: 'production' | 'development';
+  timestamp: string;
+  agent: string;
+}
+
 /** Pricing model exposed on the agent card for discovery and future monetization */
 export interface AgentPricing {
   model: string;

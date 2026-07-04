@@ -11,6 +11,7 @@ import { handleTask, parseChatToTask } from './agent/task-handler';
 import { config } from './config';
 import { ErrorCode, handleRouteError, sendError } from './errors/api-error';
 import { assertValidFeedback, storeFeedback } from './feedback/feedback';
+import { getHealthStatus } from './health/health';
 import { parseLedgerQuery, queryLedger } from './ledger/stigmergic-ledger';
 import type { TaskRequest } from './types';
 
@@ -28,14 +29,17 @@ export function createServer() {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.text({ type: 'text/plain', limit: '1mb' }));
 
-  app.get('/health', (_req: Request, res: Response) => {
-    res.json({
-      status: 'ok',
-      agent: config.agentName,
-      version: config.agentVersion,
-      principles_active: ['stigmergy', 'first_principles', 'convergence'],
-    });
-  });
+  const healthHandler = async (_req: Request, res: Response) => {
+    try {
+      const { body, httpStatus } = await getHealthStatus();
+      res.status(httpStatus).json(body);
+    } catch (err) {
+      handleRouteError(res, err, 'Health check error');
+    }
+  };
+
+  app.get('/health', healthHandler);
+  app.get('/status', healthHandler);
 
   app.get('/.well-known/agent.json', async (_req: Request, res: Response) => {
     try {
@@ -162,6 +166,7 @@ export function createServer() {
         ledger: 'GET /api/ledger?task_type&principle&requesting_agent&since&limit',
         agent_card: 'GET /.well-known/agent.json',
         health: 'GET /health',
+        status: 'GET /status',
       },
       documentation: 'See README.md',
     });

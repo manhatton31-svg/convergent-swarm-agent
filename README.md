@@ -243,11 +243,63 @@ npm run dev             # development with auto-reload
 npm run build && npm start   # production
 ```
 
+### Health & observability
+
+Orchestrators and calling agents can probe operational status at:
+
+```
+GET /health
+GET /status   # alias
+```
+
+Returns structured JSON with `status` (`healthy` | `degraded` | `unhealthy`), `version`, `uptime_seconds`, `last_activity`, `capabilities_status`, `ledger_status`, `environment`, and `timestamp`.
+
+| Status | Meaning |
+|--------|---------|
+| `healthy` | All dependencies readable; persistent ledger (local/Railway/Render) |
+| `degraded` | Operational but ledger is **ephemeral** (Vercel `/tmp` — data resets on cold starts) |
+| `unhealthy` | Critical failure (ledger or system prompt unreadable) — HTTP 503 |
+
+Example:
+
+```bash
+curl https://csa-agent-amber.vercel.app/health
+```
+
+```json
+{
+  "status": "degraded",
+  "version": "1.0.0",
+  "uptime_seconds": 42,
+  "last_activity": "2026-07-04T16:19:11.600Z",
+  "capabilities_status": {
+    "ledger_mode": "ephemeral",
+    "schemas_enabled": true,
+    "feedback_loop_enabled": true,
+    "stigmergic_ledger_queryable": true,
+    "system_prompt_available": true
+  },
+  "ledger_status": {
+    "entry_count": 3,
+    "task_entries": 2,
+    "feedback_entries": 1,
+    "last_write_time": "2026-07-04T16:19:11.601Z",
+    "readable": true
+  },
+  "environment": "production",
+  "timestamp": "2026-07-04T17:00:00.000Z",
+  "agent": "Convergent Swarm Agent"
+}
+```
+
+Documented on the agent card under `capabilities.health`.
+
 ### API endpoints
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET` | `/health` | Health check |
+| `GET` | `/health` | Health & observability probe |
+| `GET` | `/status` | Alias for `/health` |
 | `GET` | `/.well-known/agent.json` | A2A agent card (Agentverse discovery) |
 | `POST` | `/api/task` | Submit structured task (primary) |
 | `POST` | `/api/chat` | Agentverse-friendly chat (text or JSON) |
