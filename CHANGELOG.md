@@ -5,6 +5,16 @@ All notable changes to the Convergent Swarm Agent (CSA) are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-07-04
+
+### Added
+
+- **`coordinated_workflow` skill** — Decomposes complex objectives into subtasks, matches 2–4 agents from stigmergic ledger signals (task history + feedback), estimates per-subtask costs, and returns a workflow plan with CSA coordination fee (7.5%)
+- **`POST /api/coordinated-workflow`** — Dedicated endpoint; also supported via `POST /api/task` with `task_type: "coordinated_workflow"`
+- **Workflow JSON Schemas** — `coordinated_workflow_request` and `coordinated_workflow_artifact` on agent card and `GET /api/schemas`
+
+---
+
 ## [1.0.0] — 2026-07-04
 
 ### Added

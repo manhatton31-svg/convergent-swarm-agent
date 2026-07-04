@@ -6,6 +6,10 @@ import {
   TASK_REQUEST_INPUT_SCHEMA,
   TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
 } from '../schemas/task-schemas';
+import {
+  COORDINATED_WORKFLOW_INPUT_SCHEMA,
+  COORDINATED_WORKFLOW_OUTPUT_SCHEMA,
+} from '../schemas/workflow-schemas';
 import type { AgentCard } from '../types';
 
 const taskSchemas = {
@@ -79,7 +83,8 @@ export async function buildAgentCard(): Promise<AgentCard> {
         description:
           'Queryable shared JSON ledger for stigmergic coordination — agents read filtered environmental signals without direct messaging',
         query_parameters: {
-          task_type: 'Filter task signals: future_state_transition | convergence_analysis | strategy_evolution',
+          task_type:
+            'Filter task signals: future_state_transition | convergence_analysis | strategy_evolution | coordinated_workflow',
           principle:
             'Filter feedback signals: auto_catalysis | decentralization | zero_marginal_cost | exponential_economics | adjacent_possible',
           requesting_agent: 'Filter by calling agent identifier',
@@ -204,6 +209,34 @@ export async function buildAgentCard(): Promise<AgentCard> {
         outputSchema: taskSchemas.outputSchema,
       },
       {
+        id: 'coordinated_workflow',
+        name: 'Coordinated Workflow',
+        description:
+          'Problem: A complex marketing objective requires multiple specialist agents but the orchestrator ' +
+          'does not know who is available, at what cost, or in what sequence. Solution: CSA decomposes the main ' +
+          'objective into 2–4 subtasks, searches the stigmergic ledger for agents with prior task/feedback signals, ' +
+          'assembles a recommended team of 2–4 collaborators with estimated costs, and returns a workflow plan ' +
+          'including a 5–10% CSA coordination fee.',
+        tags: [
+          'coordinated-workflow',
+          'agent-orchestration',
+          'multi-agent',
+          'stigmergic-coordination',
+          'agent-to-agent',
+          'workflow-planning',
+          'cost-estimation',
+          'swarm-coordination',
+          'marketing-strategy',
+        ],
+        examples: [
+          'Plan a coordinated workflow to transition our B2B SaaS to agent-discoverable marketing with a team of specialist agents',
+          'Break down "converge content, performance, and community into one agent-coordinated system" into subtasks with costs',
+          'Orchestrate enterprise RegTech repositioning — match agents from the ledger and estimate total spend',
+        ],
+        inputSchema: COORDINATED_WORKFLOW_INPUT_SCHEMA as Record<string, unknown>,
+        outputSchema: COORDINATED_WORKFLOW_OUTPUT_SCHEMA as Record<string, unknown>,
+      },
+      {
         id: 'stigmergic_ledger_query',
         name: 'Stigmergic Ledger Query',
         description:
@@ -232,7 +265,12 @@ export async function buildAgentCard(): Promise<AgentCard> {
           properties: {
             task_type: {
               type: 'string',
-              enum: ['future_state_transition', 'convergence_analysis', 'strategy_evolution'],
+              enum: [
+                'future_state_transition',
+                'convergence_analysis',
+                'strategy_evolution',
+                'coordinated_workflow',
+              ],
               description: 'Filter task entries by type',
             },
             principle: {

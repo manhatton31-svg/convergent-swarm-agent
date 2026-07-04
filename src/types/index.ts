@@ -12,7 +12,13 @@ export type RoadmapPrinciple =
 export type TaskType =
   | 'future_state_transition'
   | 'convergence_analysis'
-  | 'strategy_evolution';
+  | 'strategy_evolution'
+  | 'coordinated_workflow';
+
+export type AgentAvailabilitySignal =
+  | 'active_in_ledger'
+  | 'feedback_only'
+  | 'inferred_capability';
 
 export interface TaskContext {
   business_name?: string;
@@ -98,6 +104,75 @@ export interface FeedbackRequest {
   message: string;
   questions: FeedbackQuestion[];
   submit_endpoint: string;
+}
+
+export interface CoordinatedWorkflowContext {
+  objective: string;
+  business_name?: string;
+  industry?: string;
+  budget_usd?: number;
+  constraints?: string[];
+  goals?: string[];
+  additional_context?: string;
+  current_marketing_model?: string;
+}
+
+export interface CoordinatedWorkflowRequest {
+  task_id?: string;
+  requesting_agent: string;
+  task_type: 'coordinated_workflow';
+  context: CoordinatedWorkflowContext;
+  metadata?: Record<string, unknown>;
+}
+
+export interface WorkflowSubtask {
+  subtask_id: string;
+  sequence: number;
+  name: string;
+  description: string;
+  estimated_duration: string;
+  recommended_agent_id: string;
+  recommended_agent_name: string;
+  estimated_cost_usd: number;
+  match_rationale: string;
+  depends_on: string[];
+}
+
+export interface RecommendedTeamMember {
+  agent_id: string;
+  display_name: string;
+  capabilities: string[];
+  ledger_task_count: number;
+  average_satisfaction: number | null;
+  availability_signal: AgentAvailabilitySignal;
+  estimated_total_cost_usd: number;
+  subtasks_assigned: string[];
+}
+
+export interface WorkflowCostBreakdown {
+  subtasks_total_usd: number;
+  coordination_fee_usd: number;
+  coordination_fee_percent: number;
+  total_estimated_usd: number;
+  currency: 'USD';
+}
+
+export interface CoordinatedWorkflowArtifact {
+  task_id: string;
+  generated_at: string;
+  requesting_agent: string;
+  agent_name: string;
+  agent_version: string;
+  skill: 'coordinated_workflow';
+  principles_applied: ActivePrinciple[];
+  main_objective: string;
+  workflow_summary: string;
+  subtasks: WorkflowSubtask[];
+  recommended_team: RecommendedTeamMember[];
+  cost_breakdown: WorkflowCostBreakdown;
+  ledger_signals_used: number;
+  stigmergic_ledger_ref: string;
+  feedback_request: FeedbackRequest;
 }
 
 export interface TransitionArtifact {

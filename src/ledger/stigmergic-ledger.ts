@@ -31,6 +31,7 @@ const VALID_TASK_TYPES: TaskType[] = [
   'future_state_transition',
   'convergence_analysis',
   'strategy_evolution',
+  'coordinated_workflow',
 ];
 
 const VALID_PRINCIPLES: RoadmapPrinciple[] = [

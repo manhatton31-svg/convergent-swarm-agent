@@ -302,6 +302,7 @@ Documented on the agent card under `capabilities.health`.
 | `GET` | `/status` | Alias for `/health` |
 | `GET` | `/.well-known/agent.json` | A2A agent card (Agentverse discovery) |
 | `POST` | `/api/task` | Submit structured task (primary) |
+| `POST` | `/api/coordinated-workflow` | Multi-agent workflow plan with cost estimates |
 | `POST` | `/api/chat` | Agentverse-friendly chat (text or JSON) |
 | `POST` | `/api/feedback` | Submit post-task feedback |
 | `GET` | `/api/ledger` | Read stigmergic ledger |

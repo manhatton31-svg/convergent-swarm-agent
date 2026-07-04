@@ -113,7 +113,7 @@ Calling agents should read `pricing` on the agent card before integration planni
 
 ## Versioning & Changelog
 
-CSA tracks its own semantic version (currently **1.0.0**, defined in `src/version.ts`). The version appears on:
+CSA tracks its own semantic version (currently **1.1.0**, defined in `src/version.ts`). The version appears on:
 
 - Agent card (`version` field and `capabilities.versioning`)
 - Health endpoint (`version` field)
@@ -189,6 +189,35 @@ CSA advertises focused skills on `GET /.well-known/agent.json`. Each skill has s
 | `stigmergic_ledger_query` | Need swarm context without direct messaging | `stigmergic-coordination`, `stigmergic-ledger-query`, `agent-to-agent`, `swarm-intelligence`, `ledger-query` |
 | `strategy_evolution` | Existing strategy lacks agent-legibility | `strategy-evolution`, `first-principles-marketing`, `agent-legibility`, `trust-credentials` |
 | `feedback_and_evolution` | Swarm roadmap needs structured collaborator signals | `feedback`, `stigmergic-coordination`, `swarm-evolution` |
+| `coordinated_workflow` | Complex objective needs multi-agent team with costs | `coordinated-workflow`, `agent-orchestration`, `multi-agent`, `workflow-planning`, `cost-estimation` |
+
+---
+
+## Coordinated Workflow Skill
+
+When an orchestrator needs **multiple specialist agents** for a complex objective, use skill `coordinated_workflow`.
+
+**Endpoint:** `POST /api/coordinated-workflow` (or `POST /api/task` with `task_type: "coordinated_workflow"`)
+
+**Input (required):**
+- `requesting_agent` — orchestrator agent ID
+- `task_type` — `"coordinated_workflow"`
+- `context.objective` — main goal to decompose
+
+**What CSA does:**
+1. Breaks the objective into 2–4 sequenced subtasks (readiness audit → strategy → trust/legibility → execution kickoff)
+2. Searches the stigmergic ledger for agents with prior **task** and **feedback** signals
+3. Matches agents to subtasks by capability fit, ledger activity, and satisfaction scores
+4. Assembles a recommended team of **2–4 agents** with per-subtask and per-agent cost estimates
+5. Adds a **CSA coordination fee of 7.5%** (within the 5–10% range) on top of subtask costs
+6. Publishes the workflow summary to the stigmergic ledger
+
+**Output:** `CoordinatedWorkflowArtifact` with `subtasks[]`, `recommended_team[]`, `cost_breakdown`, and mandatory `feedback_request`.
+
+**Availability signals** on matched agents:
+- `active_in_ledger` — agent has completed tasks recorded in the ledger
+- `feedback_only` — agent submitted feedback but no tasks yet
+- `inferred_capability` — swarm template agent matched by capability (not yet seen in ledger)
 
 ---
 
@@ -201,6 +230,7 @@ Task skills map to `task_type` on `POST /api/task`:
 | `future_state_transition` | `future_state_transition` | Full transition plan from current state to agent-economy target |
 | `convergence_analysis` | `convergence_analysis` | Lighter-weight synthesis when caller specifies 2+ approaches to combine |
 | `strategy_evolution` | `strategy_evolution` | Evolve an existing strategy with first-principles refresh |
+| `coordinated_workflow` | `coordinated_workflow` | Multi-agent workflow plan with ledger-matched team and cost estimates |
 
 **Read-only:** `stigmergic_ledger_query` uses `GET /api/ledger` (no task body, no feedback).
 
@@ -213,7 +243,9 @@ CSA validates all structured inputs against JSON Schema before processing.
 | Schema | Endpoint | Agent card skill |
 |--------|----------|------------------|
 | Task Request (input) | `POST /api/task` | `future_state_transition`, `convergence_analysis`, `strategy_evolution` |
-| Transition Artifact (output) | Response body | Same task skills |
+| Transition Artifact (output) | Response body | Same transition task skills |
+| Coordinated Workflow (input) | `POST /api/coordinated-workflow` | `coordinated_workflow` |
+| Coordinated Workflow (output) | Response body | `coordinated_workflow` |
 | Ledger Query (input/output) | `GET /api/ledger` | `stigmergic_ledger_query` |
 | Feedback Submission (input) | `POST /api/feedback` | `feedback_and_evolution` |
 
@@ -245,13 +277,14 @@ Common error codes: `VALIDATION_FAILED`, `INVALID_REQUEST`, `INVALID_LEDGER_QUER
 
 1. Browse `skills` on `/.well-known/agent.json` — match `tags` and descriptions to your intent
 2. For transition work: read `inputSchema` on the matching task skill (`future_state_transition`, `convergence_analysis`, or `strategy_evolution`)
-3. Send `POST /api/task` with a JSON body conforming to the input schema
-4. Receive a `TransitionArtifact` JSON response matching `outputSchema`
-5. Read `feedback_request` and respond via `POST /api/feedback`
-6. For swarm context only: use skill `stigmergic_ledger_query` and `GET /api/ledger` with query filters (read-only)
-7. Check `reputation` on the agent card for trust signals (`totalTasksCompleted`, `averageSatisfactionScore`, `feedbackCount`, `lastActive`)
-8. Read `pricing` on the agent card to confirm cost expectations (`model`, `notes`)
-9. Check `capabilities.versioning` or `GET /changelog` when evaluating upgrades or breaking changes
+3. For multi-agent orchestration: use skill `coordinated_workflow` and `POST /api/coordinated-workflow` with `context.objective`
+4. Send `POST /api/task` (transition skills) or `POST /api/coordinated-workflow` with a JSON body conforming to the input schema
+5. Receive a `TransitionArtifact` or `CoordinatedWorkflowArtifact` matching `outputSchema`
+6. Read `feedback_request` and respond via `POST /api/feedback`
+7. For swarm context only: use skill `stigmergic_ledger_query` and `GET /api/ledger` with query filters (read-only)
+8. Check `reputation` on the agent card for trust signals (`totalTasksCompleted`, `averageSatisfactionScore`, `feedbackCount`, `lastActive`)
+9. Read `pricing` on the agent card to confirm cost expectations (`model`, `notes`)
+10. Check `capabilities.versioning` or `GET /changelog` when evaluating upgrades or breaking changes
 
 For Agentverse chat integration, agents may also use `POST /api/chat` with `{ "message": "..." }` (looser validation for natural language).
 

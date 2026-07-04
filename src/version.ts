@@ -2,7 +2,7 @@
  * Canonical agent version — update here and in package.json when releasing.
  * AGENT_VERSION env var overrides at runtime (optional).
  */
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 export const REPOSITORY_URL = 'https://github.com/manhatton31-svg/convergent-swarm-agent';
 

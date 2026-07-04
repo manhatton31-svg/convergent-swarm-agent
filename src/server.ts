@@ -7,6 +7,11 @@ import {
   TASK_REQUEST_INPUT_SCHEMA,
   TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
 } from './schemas/task-schemas';
+import {
+  COORDINATED_WORKFLOW_INPUT_SCHEMA,
+  COORDINATED_WORKFLOW_OUTPUT_SCHEMA,
+} from './schemas/workflow-schemas';
+import { handleCoordinatedWorkflow } from './agent/coordinated-workflow';
 import { handleTask, parseChatToTask } from './agent/task-handler';
 import { config } from './config';
 import { ErrorCode, handleRouteError, sendError } from './errors/api-error';
@@ -16,7 +21,8 @@ import { parseLedgerQuery, queryLedger } from './ledger/stigmergic-ledger';
 import type { TaskRequest } from './types';
 
 const LEDGER_QUERY_USAGE = {
-  task_type: 'future_state_transition | convergence_analysis | strategy_evolution',
+  task_type:
+    'future_state_transition | convergence_analysis | strategy_evolution | coordinated_workflow',
   principle:
     'auto_catalysis | decentralization | zero_marginal_cost | exponential_economics | adjacent_possible',
   requesting_agent: 'agent identifier string',
@@ -61,6 +67,8 @@ export function createServer() {
     res.json({
       task_request: TASK_REQUEST_INPUT_SCHEMA,
       transition_artifact: TRANSITION_ARTIFACT_OUTPUT_SCHEMA,
+      coordinated_workflow_request: COORDINATED_WORKFLOW_INPUT_SCHEMA,
+      coordinated_workflow_artifact: COORDINATED_WORKFLOW_OUTPUT_SCHEMA,
       feedback_submission: FEEDBACK_INPUT_SCHEMA,
     });
   });
@@ -107,10 +115,28 @@ export function createServer() {
 
   app.post('/api/task', async (req: Request, res: Response) => {
     try {
+      if (req.body?.task_type === 'coordinated_workflow') {
+        const artifact = await handleCoordinatedWorkflow(req.body);
+        res.status(200).json(artifact);
+        return;
+      }
       const artifact = await handleTask(req.body);
       res.status(200).json(artifact);
     } catch (err) {
       handleRouteError(res, err, 'Task error');
+    }
+  });
+
+  app.post('/api/coordinated-workflow', async (req: Request, res: Response) => {
+    try {
+      const body =
+        req.body?.task_type === 'coordinated_workflow'
+          ? req.body
+          : { ...req.body, task_type: 'coordinated_workflow' };
+      const artifact = await handleCoordinatedWorkflow(body);
+      res.status(200).json(artifact);
+    } catch (err) {
+      handleRouteError(res, err, 'Coordinated workflow error');
     }
   });
 
@@ -170,6 +196,7 @@ export function createServer() {
       description: 'Future-State Transition Architect for marketing',
       endpoints: {
         task: 'POST /api/task',
+        coordinated_workflow: 'POST /api/coordinated-workflow',
         chat: 'POST /api/chat',
         feedback: 'POST /api/feedback',
         ledger: 'GET /api/ledger?task_type&principle&requesting_agent&since&limit',

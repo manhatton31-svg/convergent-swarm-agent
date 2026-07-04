@@ -1,6 +1,6 @@
 {
   "name": "convergent-swarm-agent",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Future-State Transition Architect for marketing — a Convergent Swarm Agent for the agent economy",
   "main": "dist/index.js",
   "scripts": {
