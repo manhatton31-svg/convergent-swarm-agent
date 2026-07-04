@@ -112,19 +112,22 @@ export async function buildAgentCard(): Promise<AgentCard> {
         id: 'future_state_transition',
         name: 'Future State Transition',
         description:
-          'Analyze a business\'s current marketing model and produce a bold, structured transition plan ' +
-          'toward agent-economy readiness — where discovery, evaluation, and transactions happen ' +
-          'agent-to-agent and personal Jarvis agents are primary buyers.',
+          'Problem: Your client\'s marketing is built for human funnels and is invisible to procurement agents, ' +
+          'Jarvis shoppers, and agent-to-agent discovery. Solution: CSA scores agent-economy readiness, identifies gaps, ' +
+          'and returns a phased transition plan with trust credentials, capability shifts, and converged plays — so ' +
+          'calling agents can reposition a business for where demand actually moves next.',
         tags: [
-          'marketing',
-          'strategy',
           'agent-economy',
-          'transition',
-          'jarvis-agents',
-          'procurement-agents',
-          'stigmergy',
-          'first-principles',
+          'future-state-transition',
+          'stigmergic-coordination',
+          'first-principles-marketing',
+          'marketing-strategy',
+          'agent-to-agent',
+          'jarvis-agent-readiness',
           'convergence',
+          'procurement-agents',
+          'transition-architect',
+          'business-model-shift',
         ],
         examples: [
           'Transition our B2B SaaS from human-led demand gen to agent-discoverable marketing with procurement-ready credentials',
@@ -141,14 +144,18 @@ export async function buildAgentCard(): Promise<AgentCard> {
         id: 'convergence_analysis',
         name: 'Convergence Analysis',
         description:
-          'Synthesize 2–3 creative convergences from separate marketing approaches into unified, ' +
-          'higher-performing strategies with named playbooks, synergy rationale, and immediate first actions.',
+          'Problem: A business runs disconnected marketing plays (content, paid, community, brand) that compete ' +
+          'for budget and never compound. Solution: CSA fuses 2+ specified approaches into 2–3 named convergences ' +
+          'with synergy rationale, expected multipliers, and immediate first actions — lighter-weight than a full ' +
+          'transition plan when the caller already knows which approaches to combine.',
         tags: [
           'convergence',
-          'marketing',
-          'multi-approach',
-          'strategy',
-          'synthesis',
+          'convergence-analysis',
+          'marketing-strategy',
+          'strategy-synthesis',
+          'multi-channel',
+          'agent-economy',
+          'first-principles-marketing',
           'agent-coordination',
         ],
         examples: [
@@ -162,17 +169,112 @@ export async function buildAgentCard(): Promise<AgentCard> {
         outputSchema: taskSchemas.outputSchema,
       },
       {
+        id: 'stigmergic_ledger_query',
+        name: 'Stigmergic Ledger Query',
+        description:
+          'Problem: Agents need swarm context without synchronous messaging — what transitions ran, what feedback ' +
+          'trends emerged, which roadmap principles peers prioritize. Solution: Query CSA\'s shared JSON ledger via ' +
+          'GET /api/ledger with filters for task type, roadmap principle, requesting agent, or time window. Read-only; ' +
+          'no task execution or feedback required.',
+        tags: [
+          'stigmergic-coordination',
+          'stigmergic-ledger-query',
+          'agent-to-agent',
+          'swarm-intelligence',
+          'environmental-signals',
+          'indirect-coordination',
+          'ledger-query',
+          'agent-economy',
+        ],
+        examples: [
+          'GET /api/ledger?task_type=future_state_transition&limit=10 — recent transition signals',
+          'GET /api/ledger?principle=adjacent_possible&since=2026-01-01T00:00:00Z — feedback favoring Adjacent Possible',
+          'GET /api/ledger?requesting_agent=growth-strategist-agent-v2 — history for a specific collaborator',
+        ],
+        inputSchema: {
+          type: 'object',
+          description: 'Query parameters for GET /api/ledger (append as URL query string)',
+          properties: {
+            task_type: {
+              type: 'string',
+              enum: ['future_state_transition', 'convergence_analysis', 'strategy_evolution'],
+              description: 'Filter task entries by type',
+            },
+            principle: {
+              type: 'string',
+              enum: [
+                'auto_catalysis',
+                'decentralization',
+                'zero_marginal_cost',
+                'exponential_economics',
+                'adjacent_possible',
+              ],
+              description: 'Filter feedback entries by roadmap principle preference',
+            },
+            requesting_agent: {
+              type: 'string',
+              description: 'Filter entries by calling agent identifier',
+            },
+            since: {
+              type: 'string',
+              format: 'date-time',
+              description: 'ISO-8601 timestamp — return entries on or after this time',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              description: 'Max entries to return (default 50)',
+            },
+          },
+        },
+        outputSchema: {
+          type: 'object',
+          required: [
+            'version',
+            'last_updated',
+            'query',
+            'total_in_ledger',
+            'total_matching',
+            'returned',
+            'entries',
+            'aggregate_insights',
+          ],
+          properties: {
+            version: { type: 'string' },
+            last_updated: { type: 'string', format: 'date-time' },
+            query: { type: 'object' },
+            total_in_ledger: { type: 'integer' },
+            total_matching: { type: 'integer' },
+            returned: { type: 'integer' },
+            entries: { type: 'array', items: { type: 'object' } },
+            aggregate_insights: {
+              type: 'object',
+              properties: {
+                total_tasks: { type: 'integer' },
+                total_feedback: { type: 'integer' },
+                average_satisfaction: { type: ['number', 'null'] },
+                most_requested_roadmap_principle: { type: ['string', 'null'] },
+              },
+            },
+          },
+        },
+      },
+      {
         id: 'strategy_evolution',
         name: 'Strategy Evolution',
         description:
-          'Evolve an existing marketing strategy using first-principles thinking — reposition from ' +
-          'human-funnel optimization to agent-legible architecture with trust credentials and outcome-based contracts.',
+          'Problem: An existing marketing strategy optimizes human attention funnels but lacks agent-legible ' +
+          'architecture, verifiable outcomes, or procurement-ready trust signals. Solution: CSA applies first-principles ' +
+          'thinking to evolve the strategy in place — repositioning capabilities, contracts, and discovery for agent-mediated buyers.',
         tags: [
-          'evolution',
-          'first-principles',
-          'roadmap',
-          'enterprise',
+          'strategy-evolution',
+          'first-principles-marketing',
           'agent-legibility',
+          'marketing-strategy',
+          'agent-economy',
+          'enterprise',
+          'trust-credentials',
         ],
         examples: [
           'Evolve our agency retainer model toward outcome-based agent contracts verifiable by client procurement agents',
@@ -188,9 +290,16 @@ export async function buildAgentCard(): Promise<AgentCard> {
         id: 'feedback_and_evolution',
         name: 'Swarm Feedback Loop',
         description:
-          'Mandatory post-task feedback collection (3 structured questions) stored in the stigmergic ledger ' +
-          'to prioritize roadmap principles and evolve future collaboration across the agent swarm.',
-        tags: ['feedback', 'stigmergy', 'roadmap', 'evolution', 'swarm'],
+          'Problem: The swarm cannot evolve CSA\'s roadmap without structured signals from collaborators. Solution: ' +
+          'After any task skill, submit 3 mandatory feedback responses (satisfaction, improvement, roadmap principle ' +
+          'preference) via POST /api/feedback — stored in the stigmergic ledger to prioritize future capabilities.',
+        tags: [
+          'feedback',
+          'stigmergic-coordination',
+          'swarm-evolution',
+          'roadmap',
+          'agent-to-agent',
+        ],
         examples: [
           'Submit feedback for task abc-123 with satisfaction score and roadmap principle preference',
         ],

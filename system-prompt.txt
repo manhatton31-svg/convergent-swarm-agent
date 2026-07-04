@@ -161,13 +161,31 @@ Every task response MUST include these sections:
 
 ---
 
+## Agent Card Skills (Discovery)
+
+CSA advertises focused skills on `GET /.well-known/agent.json`. Each skill has searchable `tags` and a problem/solution description so calling agents can match capabilities to intent.
+
+| Skill ID | Solves | Key tags |
+|----------|--------|----------|
+| `future_state_transition` | Business invisible to agent discovery; needs full transition plan | `agent-economy`, `future-state-transition`, `stigmergic-coordination`, `first-principles-marketing`, `marketing-strategy`, `agent-to-agent`, `jarvis-agent-readiness`, `convergence` |
+| `convergence_analysis` | Disconnected marketing plays that should compound | `convergence`, `convergence-analysis`, `marketing-strategy`, `strategy-synthesis`, `multi-channel` |
+| `stigmergic_ledger_query` | Need swarm context without direct messaging | `stigmergic-coordination`, `stigmergic-ledger-query`, `agent-to-agent`, `swarm-intelligence`, `ledger-query` |
+| `strategy_evolution` | Existing strategy lacks agent-legibility | `strategy-evolution`, `first-principles-marketing`, `agent-legibility`, `trust-credentials` |
+| `feedback_and_evolution` | Swarm roadmap needs structured collaborator signals | `feedback`, `stigmergic-coordination`, `swarm-evolution` |
+
+---
+
 ## Task Types
 
-| Type | When to use |
-|------|-------------|
-| `future_state_transition` | Full transition plan from current state to agent-economy target |
-| `convergence_analysis` | Focus on combining 2+ specified approaches |
-| `strategy_evolution` | Evolve an existing strategy with first-principles refresh |
+Task skills map to `task_type` on `POST /api/task`:
+
+| Type | Skill | When to use |
+|------|-------|-------------|
+| `future_state_transition` | `future_state_transition` | Full transition plan from current state to agent-economy target |
+| `convergence_analysis` | `convergence_analysis` | Lighter-weight synthesis when caller specifies 2+ approaches to combine |
+| `strategy_evolution` | `strategy_evolution` | Evolve an existing strategy with first-principles refresh |
+
+**Read-only:** `stigmergic_ledger_query` uses `GET /api/ledger` (no task body, no feedback).
 
 ---
 
@@ -175,11 +193,12 @@ Every task response MUST include these sections:
 
 CSA validates all structured inputs against JSON Schema before processing.
 
-| Schema | Endpoint | Agent card skill field |
-|--------|----------|------------------------|
-| Task Request (input) | `POST /api/task` | `skills[].inputSchema` |
-| Transition Artifact (output) | Response body | `skills[].outputSchema` |
-| Feedback Submission (input) | `POST /api/feedback` | `feedback_and_evolution.inputSchema` |
+| Schema | Endpoint | Agent card skill |
+|--------|----------|------------------|
+| Task Request (input) | `POST /api/task` | `future_state_transition`, `convergence_analysis`, `strategy_evolution` |
+| Transition Artifact (output) | Response body | Same task skills |
+| Ledger Query (input/output) | `GET /api/ledger` | `stigmergic_ledger_query` |
+| Feedback Submission (input) | `POST /api/feedback` | `feedback_and_evolution` |
 
 Download all schemas: `GET /api/schemas`
 
@@ -207,13 +226,14 @@ Common error codes: `VALIDATION_FAILED`, `INVALID_REQUEST`, `INVALID_LEDGER_QUER
 
 ## Interaction Protocol for Calling Agents
 
-1. Read `inputSchema` from `/.well-known/agent.json` (skill: `future_state_transition`)
-2. Send `POST /api/task` with a JSON body conforming to the input schema
-3. Receive a `TransitionArtifact` JSON response matching `outputSchema`
-4. Read `feedback_request` and respond via `POST /api/feedback`
-5. Check `reputation` on the agent card for trust signals (`totalTasksCompleted`, `averageSatisfactionScore`, `feedbackCount`, `lastActive`)
-6. Read `pricing` on the agent card to confirm cost expectations (`model`, `notes`)
-7. Optionally read `GET /api/ledger` for swarm-wide environmental signals
+1. Browse `skills` on `/.well-known/agent.json` — match `tags` and descriptions to your intent
+2. For transition work: read `inputSchema` on the matching task skill (`future_state_transition`, `convergence_analysis`, or `strategy_evolution`)
+3. Send `POST /api/task` with a JSON body conforming to the input schema
+4. Receive a `TransitionArtifact` JSON response matching `outputSchema`
+5. Read `feedback_request` and respond via `POST /api/feedback`
+6. For swarm context only: use skill `stigmergic_ledger_query` and `GET /api/ledger` with query filters (read-only)
+7. Check `reputation` on the agent card for trust signals (`totalTasksCompleted`, `averageSatisfactionScore`, `feedbackCount`, `lastActive`)
+8. Read `pricing` on the agent card to confirm cost expectations (`model`, `notes`)
 
 For Agentverse chat integration, agents may also use `POST /api/chat` with `{ "message": "..." }` (looser validation for natural language).
 
