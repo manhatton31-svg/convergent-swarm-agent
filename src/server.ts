@@ -10,7 +10,7 @@ import {
 import { handleTask, parseChatToTask, TaskValidationError } from './agent/task-handler';
 import { config } from './config';
 import { storeFeedback, validateFeedback } from './feedback/feedback';
-import { readLedger } from './ledger/stigmergic-ledger';
+import { parseLedgerQuery, queryLedger } from './ledger/stigmergic-ledger';
 import type { FeedbackSubmission, TaskRequest } from './types';
 
 export function createServer() {
@@ -52,9 +52,26 @@ export function createServer() {
     }
   });
 
-  app.get('/api/ledger', async (_req: Request, res: Response) => {
-    const ledger = await readLedger();
-    res.json(ledger);
+  app.get('/api/ledger', async (req: Request, res: Response) => {
+    const { query, errors } = parseLedgerQuery(req.query as Record<string, unknown>);
+
+    if (errors.length > 0) {
+      res.status(400).json({
+        error: 'Invalid ledger query parameters',
+        details: errors,
+        usage: {
+          task_type: 'future_state_transition | convergence_analysis | strategy_evolution',
+          principle: 'auto_catalysis | decentralization | zero_marginal_cost | exponential_economics | adjacent_possible',
+          requesting_agent: 'agent identifier string',
+          since: 'ISO-8601 timestamp (entries on or after this time)',
+          limit: `positive integer, max ${100} (default 50)`,
+        },
+      });
+      return;
+    }
+
+    const result = await queryLedger(query);
+    res.json(result);
   });
 
   app.post('/api/task', async (req: Request, res: Response) => {
@@ -134,7 +151,7 @@ export function createServer() {
         task: 'POST /api/task',
         chat: 'POST /api/chat',
         feedback: 'POST /api/feedback',
-        ledger: 'GET /api/ledger',
+        ledger: 'GET /api/ledger?task_type&principle&requesting_agent&since&limit',
         agent_card: 'GET /.well-known/agent.json',
         health: 'GET /health',
       },

@@ -19,9 +19,10 @@ export function buildAgentCard(): AgentCard {
       'and business models for where the agent economy is heading — not incremental tweaks on today\'s tactics. ' +
       'When procurement agents evaluate vendors, personal Jarvis agents shop on behalf of users, and ' +
       'category agents route demand, CSA designs the transition path: agent-legible positioning, trust ' +
-      'credentials, converged strategies, and stigmergic coordination. Built on three active principles ' +
-      '(Stigmergy, First Principles, Convergence), guided by a five-principle long-term roadmap, and ' +
-      'a mandatory post-task feedback loop that evolves the swarm through shared environmental signals.',
+      'credentials, converged strategies, and stigmergic coordination. Agents coordinate indirectly through ' +
+      'a queryable shared ledger — read environmental signals by task type, roadmap principle, agent, or time ' +
+      'without direct messaging. Built on three active principles (Stigmergy, First Principles, Convergence), ' +
+      'guided by a five-principle long-term roadmap, and a mandatory post-task feedback loop.',
     url: `${config.publicUrl}/`,
     version: config.agentVersion,
     protocolVersion: '0.2.5',
@@ -39,8 +40,23 @@ export function buildAgentCard(): AgentCard {
       },
       stigmergic_ledger: {
         enabled: true,
+        queryable: true,
         endpoint: `${config.publicUrl}/api/ledger`,
-        description: 'Shared JSON ledger for indirect agent coordination via environmental signals',
+        description:
+          'Queryable shared JSON ledger for stigmergic coordination — agents read filtered environmental signals without direct messaging',
+        query_parameters: {
+          task_type: 'Filter task signals: future_state_transition | convergence_analysis | strategy_evolution',
+          principle:
+            'Filter feedback signals: auto_catalysis | decentralization | zero_marginal_cost | exponential_economics | adjacent_possible',
+          requesting_agent: 'Filter by calling agent identifier',
+          since: 'ISO-8601 timestamp — return entries on or after this time',
+          limit: 'Max entries to return (default 50, max 100)',
+        },
+        examples: [
+          `${config.publicUrl}/api/ledger?task_type=future_state_transition&limit=10`,
+          `${config.publicUrl}/api/ledger?principle=adjacent_possible&since=2026-01-01T00:00:00Z`,
+          `${config.publicUrl}/api/ledger?requesting_agent=growth-strategist-agent-v2`,
+        ],
       },
       principles: {
         active: [

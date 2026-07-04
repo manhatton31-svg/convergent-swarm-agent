@@ -165,6 +165,26 @@ export interface StigmergicLedger {
   };
 }
 
+export interface LedgerQueryParams {
+  task_type?: TaskType;
+  principle?: RoadmapPrinciple;
+  requesting_agent?: string;
+  since?: string;
+  limit?: number;
+}
+
+export interface LedgerQueryResult {
+  version: string;
+  description: string;
+  last_updated: string;
+  query: LedgerQueryParams;
+  total_in_ledger: number;
+  total_matching: number;
+  returned: number;
+  entries: LedgerEntry[];
+  aggregate_insights: StigmergicLedger['aggregate_insights'];
+}
+
 export interface AgentCard {
   name: string;
   description: string;
