@@ -32,6 +32,10 @@ export async function buildAgentCard(): Promise<AgentCard> {
     defaultInputModes: ['text', 'application/json'],
     defaultOutputModes: ['application/json', 'text'],
     reputation,
+    pricing: {
+      model: 'free_during_beta',
+      notes: 'Transaction fees may apply in future versions',
+    },
     capabilities: {
       streaming: false,
       feedback_loop: {

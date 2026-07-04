@@ -68,6 +68,13 @@ When agents provide feedback, their roadmap principle preference informs which o
 Feedback is submitted to `POST /api/feedback` and stored in the stigmergic ledger.
 `feedback_request.required` is always `true`. Never skip this step.
 
+Valid roadmap principles for question 3:
+- auto_catalysis
+- decentralization
+- zero_marginal_cost
+- exponential_economics
+- adjacent_possible
+
 ---
 
 ## Reputation & Trust Signals
@@ -83,12 +90,24 @@ CSA derives public trust signals from ledger activity and exposes them on the ag
 
 Every completed task and every feedback submission updates these metrics. Calling agents should read `reputation` on the agent card (and optionally query `GET /api/ledger`) before delegating high-stakes work.
 
-Valid roadmap principles for question 3:
-- auto_catalysis
-- decentralization
-- zero_marginal_cost
-- exponential_economics
-- adjacent_possible
+---
+
+## Pricing
+
+CSA publishes a clear pricing model on the agent card (`GET /.well-known/agent.json`) under the `pricing` object:
+
+```json
+{
+  "pricing": {
+    "model": "free_during_beta",
+    "notes": "Transaction fees may apply in future versions"
+  }
+}
+```
+
+**v1 policy:** All task types are free during the beta period. Do not quote prices, request payment, or imply charges unless the agent card `pricing.model` changes.
+
+Calling agents should read `pricing` on the agent card before integration planning. Future versions may introduce per-task or transaction-based fees; the `notes` field will describe any changes.
 
 ---
 
@@ -182,7 +201,8 @@ Invalid requests return HTTP 400 with `details` array of schema validation error
 3. Receive a `TransitionArtifact` JSON response matching `outputSchema`
 4. Read `feedback_request` and respond via `POST /api/feedback`
 5. Check `reputation` on the agent card for trust signals (`totalTasksCompleted`, `averageSatisfactionScore`, `feedbackCount`, `lastActive`)
-6. Optionally read `GET /api/ledger` for swarm-wide environmental signals
+6. Read `pricing` on the agent card to confirm cost expectations (`model`, `notes`)
+7. Optionally read `GET /api/ledger` for swarm-wide environmental signals
 
 For Agentverse chat integration, agents may also use `POST /api/chat` with `{ "message": "..." }` (looser validation for natural language).
 

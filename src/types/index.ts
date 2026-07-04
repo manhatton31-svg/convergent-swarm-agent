@@ -185,6 +185,12 @@ export interface LedgerQueryResult {
   aggregate_insights: StigmergicLedger['aggregate_insights'];
 }
 
+/** Pricing model exposed on the agent card for discovery and future monetization */
+export interface AgentPricing {
+  model: string;
+  notes: string;
+}
+
 /** Trust signals derived from the stigmergic ledger (tasks + feedback) */
 export interface ReputationMetrics {
   totalTasksCompleted: number;
@@ -202,6 +208,7 @@ export interface AgentCard {
   defaultInputModes: string[];
   defaultOutputModes: string[];
   reputation: ReputationMetrics;
+  pricing: AgentPricing;
   capabilities: Record<string, unknown>;
   skills: Array<{
     id: string;
