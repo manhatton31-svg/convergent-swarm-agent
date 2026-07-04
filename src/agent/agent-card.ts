@@ -1,4 +1,5 @@
 import { config } from '../config';
+import { getReputationMetrics } from '../ledger/stigmergic-ledger';
 import {
   FEEDBACK_INPUT_SCHEMA,
   TASK_REQUEST_INPUT_SCHEMA,
@@ -11,7 +12,9 @@ const taskSchemas = {
   outputSchema: TRANSITION_ARTIFACT_OUTPUT_SCHEMA as Record<string, unknown>,
 };
 
-export function buildAgentCard(): AgentCard {
+export async function buildAgentCard(): Promise<AgentCard> {
+  const reputation = await getReputationMetrics();
+
   return {
     name: config.agentName,
     description:
@@ -28,6 +31,7 @@ export function buildAgentCard(): AgentCard {
     protocolVersion: '0.2.5',
     defaultInputModes: ['text', 'application/json'],
     defaultOutputModes: ['application/json', 'text'],
+    reputation,
     capabilities: {
       streaming: false,
       feedback_loop: {
@@ -86,6 +90,18 @@ export function buildAgentCard(): AgentCard {
       },
       agent_economy_focus: true,
       structured_output: true,
+      trust_signals: {
+        source: 'stigmergic_ledger',
+        description:
+          'Reputation metrics derived from completed tasks and post-task feedback stored in the shared ledger',
+        metrics: [
+          'totalTasksCompleted',
+          'averageSatisfactionScore',
+          'lastActive',
+          'feedbackCount',
+        ],
+        ledger_endpoint: `${config.publicUrl}/api/ledger`,
+      },
     },
     skills: [
       {

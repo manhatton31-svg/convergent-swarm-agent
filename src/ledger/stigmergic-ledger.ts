@@ -7,6 +7,7 @@ import type {
   LedgerQueryParams,
   LedgerQueryResult,
   LedgerTaskEntry,
+  ReputationMetrics,
   RoadmapPrinciple,
   StigmergicLedger,
   TaskType,
@@ -214,4 +215,27 @@ export async function appendLedgerEntry(entry: LedgerEntry): Promise<StigmergicL
 export async function getRecentSignals(limit = 5): Promise<LedgerEntry[]> {
   const result = await queryLedger({ limit });
   return result.entries;
+}
+
+/** Derive public trust signals from ledger task and feedback entries */
+export async function getReputationMetrics(): Promise<ReputationMetrics> {
+  const ledger = await readLedger();
+  const { total_tasks, total_feedback, average_satisfaction } = ledger.aggregate_insights;
+
+  let lastActive: string | null = null;
+  if (ledger.entries.length > 0) {
+    const latest = ledger.entries.reduce((a, b) =>
+      new Date(a.timestamp).getTime() >= new Date(b.timestamp).getTime() ? a : b
+    );
+    lastActive = latest.timestamp;
+  } else if (ledger.last_updated) {
+    lastActive = ledger.last_updated;
+  }
+
+  return {
+    totalTasksCompleted: total_tasks,
+    averageSatisfactionScore: average_satisfaction,
+    lastActive,
+    feedbackCount: total_feedback,
+  };
 }

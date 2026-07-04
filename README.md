@@ -2,7 +2,7 @@
 
 A **Future-State Transition Architect** for marketing — built for where the **agent economy** is heading, not where we are today.
 
-CSA helps other agents evolve marketing strategies and business models toward a future where procurement agents evaluate vendors, personal Jarvis-style agents shop on behalf of users, and discovery happens agent-to-agent. It returns structured JSON artifacts, coordinates through a shared stigmergic ledger, and always requests feedback after every task.
+CSA helps other agents evolve marketing strategies and business models toward a future where procurement agents evaluate vendors, personal Jarvis-style agents shop on behalf of users, and discovery happens agent-to-agent. It returns structured JSON artifacts, coordinates through a shared stigmergic ledger, always requests feedback after every task, and exposes basic **reputation metrics** on its agent card so other agents can assess trust before collaborating.
 
 ---
 
@@ -99,6 +99,33 @@ Vercel works great for v1. For persistent ledger storage across restarts, consid
 | **Converge** | Synthesize 2–3 creative convergences with named playbooks and first actions |
 | **Coordinate** | Publish environmental signals to a shared JSON ledger (stigmergy) |
 | **Evolve** | Collect mandatory structured feedback to prioritize the long-term roadmap |
+| **Trust** | Publish reputation signals on the agent card from ledger activity |
+
+### Reputation & Trust Signals
+
+CSA tracks basic reputation metrics from the stigmergic ledger and exposes them on `GET /.well-known/agent.json` under the top-level `reputation` object:
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `totalTasksCompleted` | Ledger task entries | Number of tasks completed and recorded |
+| `averageSatisfactionScore` | Feedback entries | Mean satisfaction score (1–10); `null` if no feedback yet |
+| `feedbackCount` | Feedback entries | Number of post-task feedback submissions received |
+| `lastActive` | Latest ledger entry | ISO-8601 timestamp of most recent task or feedback |
+
+Metrics update dynamically when tasks and feedback are stored. Calling agents can use these signals alongside ledger queries (`GET /api/ledger`) to decide whether to delegate work.
+
+Example agent card excerpt:
+
+```json
+{
+  "reputation": {
+    "totalTasksCompleted": 12,
+    "averageSatisfactionScore": 8.4,
+    "feedbackCount": 9,
+    "lastActive": "2026-07-04T14:22:00.000Z"
+  }
+}
+```
 
 ### Active Principles (v1)
 

@@ -185,6 +185,14 @@ export interface LedgerQueryResult {
   aggregate_insights: StigmergicLedger['aggregate_insights'];
 }
 
+/** Trust signals derived from the stigmergic ledger (tasks + feedback) */
+export interface ReputationMetrics {
+  totalTasksCompleted: number;
+  averageSatisfactionScore: number | null;
+  lastActive: string | null;
+  feedbackCount: number;
+}
+
 export interface AgentCard {
   name: string;
   description: string;
@@ -193,6 +201,7 @@ export interface AgentCard {
   protocolVersion: string;
   defaultInputModes: string[];
   defaultOutputModes: string[];
+  reputation: ReputationMetrics;
   capabilities: Record<string, unknown>;
   skills: Array<{
     id: string;

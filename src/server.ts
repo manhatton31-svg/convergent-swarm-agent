@@ -27,12 +27,12 @@ export function createServer() {
     });
   });
 
-  app.get('/.well-known/agent.json', (_req: Request, res: Response) => {
-    res.json(buildAgentCard());
+  app.get('/.well-known/agent.json', async (_req: Request, res: Response) => {
+    res.json(await buildAgentCard());
   });
 
-  app.get('/api/agent-card', (_req: Request, res: Response) => {
-    res.json(buildAgentCard());
+  app.get('/api/agent-card', async (_req: Request, res: Response) => {
+    res.json(await buildAgentCard());
   });
 
   app.get('/api/schemas', (_req: Request, res: Response) => {
